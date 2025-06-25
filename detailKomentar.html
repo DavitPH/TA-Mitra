@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Komentar</title>
+    <!-- Tailwind CSS CDN untuk styling yang responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts - Poppins untuk tipografi yang konsisten -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Mengatur font Poppins sebagai font utama untuk seluruh body */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            /* Warna latar belakang umum */
+        }
+
+        /* Kustomisasi scrollbar untuk tampilan yang lebih baik */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Styling untuk sidebar yang tetap */
+        .fixed-sidebar {
+            position: fixed;
+            /* Membuat sidebar tetap */
+            left: 0;
+            /* Sejajar dengan tepi kiri */
+            top: 0;
+            /* Sejajar dengan tepi atas */
+            bottom: 0;
+            /* Membentang sepanjang tinggi penuh */
+            z-index: 50;
+            /* Memastikan di atas konten lain */
+        }
+
+        /* Menyesuaikan margin konten utama agar tidak tumpang tindih dengan sidebar yang tetap */
+        .main-content-margin {
+            margin-left: 16rem;
+            /* Sesuaikan nilai ini agar sesuai dengan lebar sidebar (w-64 = 16rem) */
+        }
+
+        /* Penyesuaian responsif untuk layar yang lebih kecil jika diperlukan (misalnya, sidebar menghilang atau menjadi dapat digulir) */
+        @media (max-width: 768px) {
+            .fixed-sidebar {
+                position: relative;
+                /* Membuat sidebar relatif di layar kecil */
+                width: 100%;
+                height: auto;
+                border-radius: 0;
+            }
+
+            .main-content-margin {
+                margin-left: 0;
+                /* Hapus margin di layar kecil */
+            }
+
+            .flex-col.md\:flex-row {
+                /* Mengembalikan arah flex untuk bilah pencarian/aksi atas di layar kecil */
+                flex-direction: column;
+            }
+
+            .mr-0.md\:mr-4 {
+                margin-right: 0;
+            }
+
+            .mb-4.md\:mb-0 {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+
+    <!-- Main Navigation Sidebar -->
+    <aside class="w-64 bg-green-700 text-white flex flex-col p-4 rounded-r-lg shadow-lg fixed-sidebar">
+        <div class="flex items-center justify-center mb-10 mt-4">
+            <div class="w-20 h-20  flex items-center justify-center p-2">
+                <!-- Snail logo from your provided image -->
+                <img src="logo.png" alt="Snail Logo" class="w-full h-full object-contain">
+            </div>
+        </div>
+        <nav class="flex-grow">
+            <ul>
+                <li class="mb-4">
+                    <a href="daftarSpesies.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-bug text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Invertebrata</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarKomentar.html" class="flex items-center p-3 rounded-lg bg-green-800 shadow-md">
+                        <i class="fas fa-comment-alt text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Komentar</span>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+        <!-- Bagian bawah sidebar, bisa untuk logout atau info lainnya -->
+        <div class="mt-auto pt-4 border-t border-green-600">
+            <a href="login.html" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                <i class="fas fa-sign-out-alt text-xl mr-3"></i>
+                <span class="font-medium text-lg">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Konten Utama Aplikasi -->
+    <main class="flex-1 p-8 main-content-margin">
+        <!-- Navigasi Breadcrumb -->
+        <nav class="mb-6 text-gray-600 text-lg">
+            <a href="daftarKomentar.html" class="hover:underline">Daftar Komentar</a>
+            <span class="mx-2 font-bold text-gray-800">&gt;</span>
+            <span class="font-semibold text-gray-800">Detail Komentar</span>
+        </nav>
+
+        <header class="mb-8">
+            <!-- Header komentar, jumlah dihilangkan -->
+            <h1 class="text-3xl font-bold text-gray-800" id="totalCommentsHeader">Komentar</h1>
+        </header>
+
+        <!-- Area Tulis Komentar Baru -->
+        <section class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <div class="border border-gray-300 rounded-lg overflow-hidden">
+                <div class="px-4 py-3 bg-gray-50 border-b border-gray-300">
+                    <textarea id="newCommentTextarea" class="w-full bg-gray-50 focus:outline-none resize-none" rows="4"
+                        placeholder="Tuliskan komentar"></textarea>
+                </div>
+                <div class="px-4 py-2 flex items-center justify-end">
+                    <button id="sendCommentButton"
+                        class="px-6 py-2 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors">
+                        Kirim
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Daftar Komentar -->
+        <section id="commentsList" class="space-y-6">
+            <!-- Komentar Contoh 1 -->
+            <div class="bg-white p-6 rounded-xl shadow-md" id="comment-1">
+                <div class="flex items-start space-x-4">
+                    <img src="https://placehold.co/40x40/E2E8F0/4A5568?text=DA" alt="Avatar user@example.com"
+                        class="w-10 h-10 rounded-full object-cover">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-semibold text-gray-900">davitputra@example.com</span>
+                                <span class="text-gray-500 text-sm">1 Juli 2025</span>
+                            </div>
+                            <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
+                                data-comment-id="1"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <p class="comment-content text-gray-800 mb-2">Spesies yang menarik! Saya pernah menemukannya di
+                            danau dekat rumah.</p>
+                        <button class="text-blue-600 hover:underline text-sm font-medium reply-btn">Balas</button>
+
+                        <!-- Kontainer form balasan yang akan ditampilkan/disembunyikan (DITAMBAHKAN/DIKONFIRMASI DI SINI) -->
+                        <div class="reply-form-container mt-2 hidden">
+                            <textarea
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                                rows="2" placeholder="Tulis balasan..."></textarea>
+                            <div class="flex justify-end mt-2 space-x-2">
+                                <button
+                                    class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg text-sm hover:bg-gray-400 transition-colors cancel-reply-btn">Batal</button>
+                                <button
+                                    class="px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg text-sm hover:bg-orange-600 transition-colors send-reply-btn">Kirim
+                                    Balasan</button>
+                            </div>
+                        </div>
+
+                        <!-- Kontainer untuk Balasan -->
+                        <div class="replies-container">
+                            <!-- Contoh Balasan 1 (ID diubah agar konsisten) -->
+                            <div class="mt-4 pl-12 border-l-2 border-gray-200 py-2 flex items-start space-x-4"
+                                id="comment-static-reply-1-1">
+                                <img src="https://placehold.co/32x32/E2E8F0/4A5568?text=AD" alt="Avatar admin@mitra.com"
+                                    class="w-8 h-8 rounded-full object-cover">
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="font-semibold text-gray-900">admin@mitra.com</span>
+                                            <span class="text-gray-500 text-sm">1 Juli 2025</span>
+                                        </div>
+                                        <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
+                                            data-comment-id="comment-static-reply-1-1"><i
+                                                class="fas fa-trash"></i></button>
+                                    </div>
+                                    <p class="comment-content text-gray-800 mb-2">Terima kasih atas informasinya,
+                                        Davit! Apakah Anda punya foto-foto dari penemuan tersebut?</p>
+                                    <button
+                                        class="text-blue-600 hover:underline text-sm font-medium reply-btn">Balas</button>
+                                    <div class="reply-form-container mt-2 hidden">
+                                        <textarea
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                                            rows="2" placeholder="Tulis balasan..."></textarea>
+                                        <div class="flex justify-end mt-2 space-x-2">
+                                            <button
+                                                class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg text-sm hover:bg-gray-400 transition-colors cancel-reply-btn">Batal</button>
+                                            <button
+                                                class="px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg text-sm hover:bg-orange-600 transition-colors send-reply-btn">Kirim
+                                                Balasan</button>
+                                        </div>
+                                    </div>
+                                    <div class="replies-container"></div>
+                                </div>
+                            </div>
+
+                            <!-- Contoh Balasan 2 (ID diubah agar konsisten) -->
+                            <div class="mt-4 pl-12 border-l-2 border-gray-200 py-2 flex items-start space-x-4"
+                                id="comment-static-reply-1-2">
+                                <img src="https://placehold.co/32x32/E2E8F0/4A5568?text=AN"
+                                    alt="Avatar anonymous@user.com" class="w-8 h-8 rounded-full object-cover">
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="font-semibold text-gray-900">anonymous@user.com</span>
+                                            <span class="text-gray-500 text-sm">2 Juli 2025</span>
+                                        </div>
+                                        <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
+                                            data-comment-id="comment-static-reply-1-2"><i
+                                                class="fas fa-trash"></i></button>
+                                    </div>
+                                    <p class="comment-content text-gray-800 mb-2">Saya juga menemukan yang serupa di
+                                        daerah X. Sangat menarik!</p>
+                                    <button
+                                        class="text-blue-600 hover:underline text-sm font-medium reply-btn">Balas</button>
+                                    <div class="reply-form-container mt-2 hidden">
+                                        <textarea
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                                            rows="2" placeholder="Tulis balasan..."></textarea>
+                                        <div class="flex justify-end mt-2 space-x-2">
+                                            <button
+                                                class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg text-sm hover:bg-gray-400 transition-colors cancel-reply-btn">Batal</button>
+                                            <button
+                                                class="px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg text-sm hover:bg-orange-600 transition-colors send-reply-btn">Kirim
+                                                Balasan</button>
+                                        </div>
+                                    </div>
+                                    <div class="replies-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Komentar Contoh 2 -->
+            <div class="bg-white p-6 rounded-xl shadow-md" id="comment-2">
+                <div class="flex items-start space-x-4">
+                    <img src="https://placehold.co/40x40/E2E8F0/4A5568?text=AN" alt="Avatar anna@example.com"
+                        class="w-10 h-10 rounded-full object-cover">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-semibold text-gray-900">anna@example.com</span>
+                                <span class="text-gray-500 text-sm">30 Juni 2025</span>
+                            </div>
+                            <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
+                                data-comment-id="2"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <p class="comment-content text-gray-800 mb-2">Apakah spesies ini termasuk invasif? Saya khawatir
+                            dengan dampaknya terhadap ekosistem lokal.</p>
+                        <button class="text-blue-600 hover:underline text-sm font-medium reply-btn">Balas</button>
+
+                        <!-- Kontainer form balasan yang akan ditampilkan/disembunyikan (DITAMBAHKAN/DIKONFIRMASI DI SINI) -->
+                        <div class="reply-form-container mt-2 hidden">
+                            <textarea
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                                rows="2" placeholder="Tulis balasan..."></textarea>
+                            <div class="flex justify-end mt-2 space-x-2">
+                                <button
+                                    class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg text-sm hover:bg-gray-400 transition-colors cancel-reply-btn">Batal</button>
+                                <button
+                                    class="px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg text-sm hover:bg-orange-600 transition-colors send-reply-btn">Kirim
+                                    Balasan</button>
+                            </div>
+                        </div>
+
+                        <!-- Kontainer untuk Balasan -->
+                        <div class="replies-container">
+                            <!-- Contoh Balasan untuk Komentar 2 (ID diubah agar konsisten) -->
+                            <div class="mt-4 pl-12 border-l-2 border-gray-200 py-2 flex items-start space-x-4"
+                                id="comment-static-reply-2-1">
+                                <img src="https://placehold.co/32x32/E2E8F0/4A5568?text=AD" alt="Avatar admin@mitra.com"
+                                    class="w-8 h-8 rounded-full object-cover">
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="font-semibold text-gray-900">admin@mitra.com</span>
+                                            <span class="text-gray-500 text-sm">30 Juni 2025</span>
+                                        </div>
+                                        <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
+                                            data-comment-id="comment-static-reply-2-1"><i
+                                                class="fas fa-trash"></i></button>
+                                    </div>
+                                    <p class="comment-content text-gray-800 mb-2">Pertanyaan bagus, Anna! Data
+                                        menunjukkan spesies ini belum dikategorikan invasif di banyak wilayah, namun
+                                        perlu pemantauan lebih lanjut.</p>
+                                    <button
+                                        class="text-blue-600 hover:underline text-sm font-medium reply-btn">Balas</button>
+                                    <div class="reply-form-container mt-2 hidden">
+                                        <textarea
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                                            rows="2" placeholder="Tulis balasan..."></textarea>
+                                        <div class="flex justify-end mt-2 space-x-2">
+                                            <button
+                                                class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg text-sm hover:bg-gray-400 transition-colors cancel-reply-btn">Batal</button>
+                                            <button
+                                                class="px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg text-sm hover:bg-orange-600 transition-colors send-reply-btn">Kirim
+                                                Balasan</button>
+                                        </div>
+                                    </div>
+                                    <div class="replies-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Komentar Contoh 3 (joko@example.com) -->
+            <div class="bg-white p-6 rounded-xl shadow-md" id="comment-3">
+                <div class="flex items-start space-x-4">
+                    <img src="https://placehold.co/40x40/E2E8F0/4A5568?text=JO" alt="Avatar joko@example.com"
+                        class="w-10 h-10 rounded-full object-cover">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-semibold text-gray-900">joko@example.com</span>
+                                <span class="text-gray-500 text-sm">29 Juni 2025</span>
+                            </div>
+                            <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
+                                data-comment-id="3"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <p class="comment-content text-gray-800 mb-2">Populasi mereka tampaknya meningkat di daerah
+                            saya. Apakah ini normal?</p>
+                        <button class="text-blue-600 hover:underline text-sm font-medium reply-btn">Balas</button>
+
+                        <!-- Kontainer form balasan yang akan ditampilkan/disembunyikan (DITAMBAHKAN/DIKONFIRMASI DI SINI) -->
+                        <div class="reply-form-container mt-2 hidden">
+                            <textarea
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                                rows="2" placeholder="Tulis balasan..."></textarea>
+                            <div class="flex justify-end mt-2 space-x-2">
+                                <button
+                                    class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg text-sm hover:bg-gray-400 transition-colors cancel-reply-btn">Batal</button>
+                                <button
+                                    class="px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg text-sm hover:bg-orange-600 transition-colors send-reply-btn">Kirim
+                                    Balasan</button>
+                            </div>
+                        </div>
+
+                        <!-- Kontainer untuk Balasan (kosong jika tidak ada balasan) -->
+                        <div class="replies-container"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Referensi elemen DOM
+            const totalCommentsHeader = document.getElementById('totalCommentsHeader');
+            const newCommentTextarea = document.getElementById('newCommentTextarea');
+            const sendCommentButton = document.getElementById('sendCommentButton');
+            const commentsList = document.getElementById('commentsList');
+
+            // Variabel untuk menghitung total komentar (perbaikan sintaks)
+            let totalComments;
+
+            // Fungsi untuk menghitung semua komentar dan balasan
+            function countAllCommentsAndReplies() {
+                // Seleksi semua elemen div yang memiliki kelas 'flex items-start space-x-4'
+                // Ini akan mencakup baik komentar tingkat atas maupun balasan
+                return commentsList.querySelectorAll('div.flex.items-start.space-x-4').length;
+            }
+
+            // Fungsi untuk memperbarui tampilan jumlah komentar
+            function updateTotalCommentsDisplay() {
+                totalCommentsHeader.textContent = `Komentar (${totalComments})`;
+                console.log(`[DEBUG] Total Komentar diperbarui: ${totalComments}`); // Log untuk debug
+            }
+
+            // Fungsi untuk membuat elemen komentar atau balasan baru
+            function createCommentElement(commentText, authorEmail, date, isReply = false) {
+                const atIndex = authorEmail.indexOf('@');
+                let initials = '';
+                if (atIndex > 0) {
+                    const namePart = authorEmail.substring(0, atIndex);
+                    initials = namePart.split('.').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    if (initials.length === 0 && namePart.length > 0) {
+                        initials = namePart.substring(0, 2).toUpperCase();
+                    }
+                }
+                if (initials.length === 0) {
+                    initials = authorEmail.substring(0, 2).toUpperCase();
+                }
+
+                const avatarSizeClass = isReply ? 'w-8 h-8' : 'w-10 h-10';
+
+                // Main wrapper for comment/reply
+                const commentElement = document.createElement('div');
+                // Berikan ID unik yang konsisten untuk semua komentar/balasan
+                commentElement.id = `comment-${Date.now() + Math.random().toString(36).substring(2, 9)}`;
+
+                // Set classes based on whether it's a reply or a top-level comment
+                let classes = ['flex', 'items-start', 'space-x-4']; // Ini adalah kelas utama untuk konten komentar/balasan
+                if (isReply) {
+                    // Untuk balasan, tidak pakai bg-white, shadow, atau rounded-xl di sini
+                    classes.push('mt-4', 'pl-12', 'border-l-2', 'border-gray-200', 'py-2');
+                } else {
+                    // Untuk komentar tingkat atas, TAMBAHKAN kelas kartu ke array kelas
+                    classes.push('bg-white', 'p-6', 'rounded-xl', 'shadow-md');
+                }
+                commentElement.className = classes.join(' '); // Terapkan semua kelas dari array
+
+                commentElement.innerHTML = `
+                    <img src="https://placehold.co/${isReply ? '32x32' : '40x40'}/E2E8F0/4A5568?text=${initials}" alt="Avatar ${authorEmail}" class="${avatarSizeClass} rounded-full object-cover">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center space-x-2"> 
+                                <span class="font-semibold text-gray-900">${authorEmail}</span>
+                                <span class="text-gray-500 text-sm">${date}</span>
+                            </div>
+                            <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn" data-comment-id="${commentElement.id}"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <p class="comment-content text-gray-800 mb-2"></p>
+                        <button class="text-blue-600 hover:underline text-sm font-medium reply-btn">Balas</button>
+                        <div class="reply-form-container mt-2 hidden">
+                            <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none" rows="2" placeholder="Tulis balasan..."></textarea>
+                            <div class="flex justify-end mt-2 space-x-2">
+                                <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg text-sm hover:bg-gray-400 transition-colors cancel-reply-btn">Batal</button>
+                                <button class="px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg text-sm hover:bg-blue-600 transition-colors send-reply-btn">Kirim Balasan</button>
+                            </div>
+                        </div>
+                        <div class="replies-container"></div>
+                    </div>
+                `;
+
+                commentElement.querySelector('.comment-content').innerHTML = commentText;
+
+                // Pasang event listener untuk elemen yang baru dibuat ini
+                attachEventListenersToComment(commentElement);
+
+                return commentElement;
+            }
+
+            // Fungsi untuk memasang event listener ke elemen komentar/balasan
+            function attachEventListenersToComment(commentElement) {
+                // Fungsionalitas Hapus Komentar/Balasan
+                const deleteButton = commentElement.querySelector('.delete-btn');
+                if (deleteButton) {
+                    deleteButton.addEventListener('click', function () {
+                        // Temukan elemen wrapper terluar yang memiliki ID "comment-"
+                        // Ini akan menghapus seluruh kartu komentar/balasan
+                        const outermostWrapper = commentElement.closest('[id^="comment-"]');
+                        if (outermostWrapper) {
+                            outermostWrapper.remove();
+                            totalComments--; // Kurangi totalComments
+                            updateTotalCommentsDisplay(); // Perbarui tampilan
+                        }
+                    });
+                }
+
+                // Fungsionalitas Balas Komentar
+                const replyButton = commentElement.querySelector('.reply-btn');
+                const replyFormContainer = commentElement.querySelector('.reply-form-container');
+                const repliesContainer = commentElement.querySelector('.replies-container');
+
+                if (replyButton && replyFormContainer && repliesContainer) {
+                    replyButton.addEventListener('click', function () {
+                        replyFormContainer.classList.toggle('hidden'); // Tampilkan/sembunyikan form balasan
+                        if (!replyFormContainer.classList.contains('hidden')) {
+                            replyFormContainer.querySelector('textarea').focus(); // Fokuskan textarea saat ditampilkan
+                        }
+                    });
+
+                    const sendReplyButton = replyFormContainer.querySelector('.send-reply-btn');
+                    const cancelReplyButton = replyFormContainer.querySelector('.cancel-reply-btn');
+
+                    if (sendReplyButton) {
+                        sendReplyButton.addEventListener('click', function () {
+                            const replyTextarea = replyFormContainer.querySelector('textarea');
+                            const replyContent = replyTextarea.value.trim();
+
+                            if (replyContent) {
+                                const replyDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                                // isReply disetel true karena ini balasan
+                                const newReplyElement = createCommentElement(replyContent, 'admin@mitra.com', replyDate, true);
+
+                                repliesContainer.appendChild(newReplyElement); // Tambahkan ke daftar balasan
+
+                                totalComments++; // Tambahkan totalComments
+                                updateTotalCommentsDisplay(); // Perbarui tampilan
+
+                                replyTextarea.value = ''; // Kosongkan textarea balasan
+                                replyFormContainer.classList.add('hidden'); // Sembunyikan form balasan
+                            }
+                        });
+                    }
+
+                    // Fungsionalitas Tombol Batal untuk Balasan
+                    if (cancelReplyButton) {
+                        cancelReplyButton.addEventListener('click', function () {
+                            replyFormContainer.querySelector('textarea').value = ''; // Kosongkan textarea
+                            replyFormContainer.classList.add('hidden'); // Sembunyikan form
+                        });
+                    }
+                }
+            }
+
+            // Fungsi untuk menginisialisasi semua komentar dan balasannya yang sudah ada di DOM
+            function initializeAllComments(containerElement) {
+                // Seleksi semua elemen yang memiliki ID yang diawali dengan "comment-"
+                const commentAndReplyElements = containerElement.querySelectorAll('[id^="comment-"]');
+
+                commentAndReplyElements.forEach(commentElement => {
+                    // Perluas seleksi untuk menemukan elemen div.flex.items-start.space-x-4 di dalamnya
+                    let innerContentDiv = commentElement.querySelector('.flex.items-start.space-x-4');
+                    // Jika elemen ini sendiri adalah div.flex.items-start.space-x-4 (kasus reply statis yang tidak punya wrapper bg-white)
+                    if (!innerContentDiv) {
+                        innerContentDiv = commentElement;
+                    }
+
+                    if (innerContentDiv) {
+                        attachEventListenersToComment(innerContentDiv);
+                    }
+                });
+            }
+
+
+            // --- Fungsionalitas Kirim Komentar Baru (Tingkat Atas) ---
+            sendCommentButton.addEventListener('click', function () {
+                const commentContent = newCommentTextarea.value.trim();
+                if (commentContent) {
+                    const commentDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                    // Buat elemen komentar baru (bukan balasan)
+                    const newCommentElement = createCommentElement(commentContent, 'admin@mitra.com', commentDate, false);
+                    commentsList.appendChild(newCommentElement); // Tambahkan ke daftar komentar utama
+                    newCommentTextarea.value = ''; // Kosongkan textarea komentar baru
+
+                    totalComments++; // Tambahkan totalComments
+                    updateTotalCommentsDisplay(); // Perbarui tampilan
+                }
+            });
+
+            // Inisialisasi hitungan komentar saat halaman dimuat
+            totalComments = countAllCommentsAndReplies(); // Inisialisasi totalComments
+            updateTotalCommentsDisplay(); // Perbarui tampilan header dengan hitungan awal
+            console.log(`[DEBUG] Initial comment count on load: ${totalComments}`); // Log untuk debug
+
+            // Inisialisasi semua komentar dan balasan yang sudah ada di DOM saat halaman dimuat
+            initializeAllComments(commentsList);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Data Spesies</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* Set Poppins as the primary font for the entire body */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Styling for the fixed sidebar */
+        .fixed-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 50;
+        }
+
+        /* Adjust main content margin to prevent overlap with fixed sidebar */
+        .main-content-margin {
+            margin-left: 16rem;
+        }
+
+        /* Styling for the Leaflet map container */
+        #miniMap {
+            height: 256px;
+            width: 100%;
+            border-radius: 0.5rem;
+            background-color: #f8f8f8;
+        }
+
+        /* Notification styling */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            display: none;
+            /* Hidden by default */
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .fixed-sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-radius: 0;
+            }
+
+            .main-content-margin {
+                margin-left: 0;
+            }
+
+            .flex-col.md\:flex-row {
+                flex-direction: column;
+            }
+
+            .mr-0.md\:mr-4 {
+                margin-right: 0;
+            }
+
+            .mb-4.md\:mb-0 {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+
+    <aside class="w-64 bg-green-700 text-white flex flex-col p-4 rounded-r-lg shadow-lg fixed-sidebar">
+        <div class="flex items-center justify-center mb-10 mt-4">
+            <div class="w-20 h-20 flex items-center justify-center p-2">
+                <img src="logo.png" alt="Snail Logo" class="w-full h-full object-contain">
+            </div>
+        </div>
+        <nav class="flex-grow">
+            <ul>
+                <li class="mb-4">
+                    <a href="daftarSpesies.html" class="flex items-center p-3 rounded-lg bg-green-800 shadow-md">
+                        <i class="fas fa-bug text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Invertebrata</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarKomentar.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-comment-alt text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Komentar</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-green-600">
+            <a href="login.html" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                <i class="fas fa-sign-out-alt text-xl mr-3"></i>
+                <span class="font-medium text-lg">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 main-content-margin">
+        <nav class="mb-6 text-gray-600 text-lg">
+            <a href="daftarSpesies.html" class="hover:underline">Daftar Spesies</a>
+            <span class="mx-2 font-bold text-gray-800">&gt;</span>
+            <span class="font-semibold text-gray-800" id="breadcrumbTitle">Edit Data</span>
+        </nav>
+
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800" id="headerTitle">Edit Data Spesies</h1>
+        </header>
+
+        <div id="notification" class="notification text-white font-semibold"></div>
+
+        <section class="bg-white p-8 rounded-xl shadow-md mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Nama Spesies</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label for="nama_umum" class="block text-gray-700 text-sm font-medium mb-2">Nama Umum</label>
+                    <input type="text" id="nama_umum"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        placeholder="Nama Umum">
+                </div>
+                <div>
+                    <label for="nama_latin" class="block text-gray-700 text-sm font-medium mb-2">Nama Latin</label>
+                    <input type="text" id="nama_latin"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        placeholder="Nama Latin">
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Klasifikasi</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div>
+                    <label for="filum" class="block text-gray-700 text-sm font-medium mb-2">Filum</label>
+                    <input type="text" id="filum"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        placeholder="Filum">
+                </div>
+                <div>
+                    <label for="kelas" class="block text-gray-700 text-sm font-medium mb-2">Kelas</label>
+                    <input type="text" id="kelas"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        placeholder="Kelas">
+                </div>
+                <div>
+                    <label for="sub_kelas" class="block text-gray-700 text-sm font-medium mb-2">Sub Kelas</label>
+                    <input type="text" id="sub_kelas"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        placeholder="Sub Kelas">
+                </div>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Gambar</h2>
+            <div class="flex flex-col space-y-4 mb-8">
+                <label for="imageUpload"
+                    class="flex items-center space-x-3 bg-gray-100 p-4 rounded-lg border border-gray-300 w-full max-w-sm cursor-pointer hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-folder text-xl text-gray-500"></i>
+                    <span class="text-gray-700">Pilih Gambar</span>
+                    <span class="text-gray-500 text-sm">.jpg, .png</span>
+                    <input type="file" id="imageUpload" class="hidden" accept="image/jpeg, image/png" multiple>
+                </label>
+                <div id="imagePreviewContainer" class="flex flex-wrap gap-4 w-full">
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Deskripsi</h2>
+            <textarea id="deskripsi"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all mb-8 h-32"
+                placeholder="Deskripsi"></textarea>
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Peta Persebaran</h2>
+            <div class="flex flex-wrap gap-4 mb-4">
+                <button
+                    class="flex items-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors"
+                    id="addMapButton">
+                    <i class="fas fa-plus mr-2"></i>
+                    Tambah Peta
+                </button>
+                <button
+                    class="flex items-center px-6 py-3 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-colors"
+                    id="viewAllMapsButton">
+                    <i class="fas fa-globe mr-2"></i>
+                    Lihat Semua Peta
+                </button>
+            </div>
+
+            <div id="mapListContainer" class="space-y-4 mb-8">
+            </div>
+            <div id="miniMap" class="border border-gray-300 rounded-lg mb-8">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Peran Ekologis</h2>
+                    <input type="text" id="peran_ekologis"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        placeholder="Peran Ekologis">
+                </div>
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Status Konservasi</h2>
+                    <select id="status_konservasi"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
+                        <option value="">Pilih Status Konservasi</option>
+                        <option value="EX">Extinct (EX)</option>
+                        <option value="EW">Extinct in the Wild (EW)</option>
+                        <option value="CR">Critically Endangered (CR)</option>
+                        <option value="EN">Endangered (EN)</option>
+                        <option value="VU">Vulnerable (VU)</option>
+                        <option value="NT">Near Threatened (NT)</option>
+                        <option value="LC">Least Concern (LC)</option>
+                        <option value="DD">Data Deficient (DD)</option>
+                        <option value="NE">Not Evaluated (NE)</option>
+                    </select>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Sumber Data</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label for="nama_peneliti" class="block text-gray-700 text-sm font-medium mb-2">Nama
+                        Peneliti</label>
+                    <input type="text" id="nama_peneliti"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        placeholder="Nama Peneliti">
+                </div>
+                <div>
+                    <label for="lokasi_penelitian" class="block text-gray-700 text-sm font-medium mb-2">Lokasi
+                        Penelitian</label>
+                    <input type="text" id="lokasi_penelitian"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        placeholder="Lokasi Penelitian">
+                </div>
+                <div>
+                    <label for="metode_penelitian" class="block text-gray-700 text-sm font-medium mb-2">Metode
+                        Penelitian</label>
+                    <input type="text" id="metode_penelitian"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-500 focus:border-transparent transition-all"
+                        placeholder="Metode Penelitian">
+                </div>
+                <div>
+                    <label for="tanggal_penelitian" class="block text-gray-700 text-sm font-medium mb-2">Tanggal
+                        Penelitian</label>
+                    <input type="date" id="tanggal_penelitian"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4">
+                <button id="cancelButton"
+                    class="px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors">
+                    Batal
+                </button>
+                <button id="saveButton"
+                    class="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors">
+                    Simpan Perubahan
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const addMapButton = document.getElementById('addMapButton');
+            const viewAllMapsButton = document.getElementById('viewAllMapsButton');
+            const mapListContainer = document.getElementById('mapListContainer');
+            const saveButton = document.getElementById('saveButton');
+            const cancelButton = document.getElementById('cancelButton');
+            const imageUploadInput = document.getElementById('imageUpload');
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            const notificationDiv = document.getElementById('notification');
+
+            let imageCounter = 0;
+            let currentImages = []; // Array untuk menyimpan URL gambar base64
+            let editIndex = null; // Menyimpan indeks spesies yang sedang diedit
+            let currentMapGeoJSON = []; // Menyimpan data peta GeoJSON untuk spesies saat ini
+
+            function showNotification(message, type = 'success') {
+                notificationDiv.textContent = message;
+                notificationDiv.className = 'notification text-white font-semibold'; // Reset classes
+
+                if (type === 'success') {
+                    notificationDiv.classList.add('bg-green-500');
+                } else if (type === 'error') {
+                    notificationDiv.classList.add('bg-red-500');
+                } else {
+                    notificationDiv.classList.add('bg-gray-500'); // Default or info
+                }
+
+                notificationDiv.style.display = 'block';
+                setTimeout(() => {
+                    notificationDiv.style.display = 'none';
+                }, 3000); // Hide after 3 seconds
+            }
+
+            // Check for and display notifications from sessionStorage
+            const notificationMessage = sessionStorage.getItem('notificationMessage');
+            const notificationType = sessionStorage.getItem('notificationType');
+            if (notificationMessage && notificationType) {
+                showNotification(notificationMessage, notificationType);
+                sessionStorage.removeItem('notificationMessage');
+                sessionStorage.removeItem('notificationType');
+            }
+
+            // --- DATA LOADING LOGIC (ORDER IS CRUCIAL) ---
+
+            // 1. Ambil parameter URL untuk mode edit
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('editIndex')) {
+                editIndex = parseInt(urlParams.get('editIndex'));
+
+                const allSpeciesRecordsString = sessionStorage.getItem('allSpeciesRecords');
+                if (allSpeciesRecordsString) {
+                    try {
+                        const allSpeciesRecords = JSON.parse(allSpeciesRecordsString);
+                        const speciesData = allSpeciesRecords[editIndex];
+
+                        if (speciesData) {
+                            document.getElementById('nama_umum').value = speciesData.nama_umum || '';
+                            document.getElementById('nama_latin').value = speciesData.nama_latin || '';
+                            document.getElementById('filum').value = speciesData.filum || '';
+                            document.getElementById('kelas').value = speciesData.kelas || '';
+                            document.getElementById('sub_kelas').value = speciesData.sub_kelas || '';
+                            document.getElementById('deskripsi').value = speciesData.deskripsi || '';
+                            document.getElementById('peran_ekologis').value = speciesData.peran_ekologis || '';
+                            document.getElementById('status_konservasi').value = speciesData.status_konservasi || '';
+                            document.getElementById('nama_peneliti').value = speciesData.nama_peneliti || '';
+                            document.getElementById('lokasi_penelitian').value = speciesData.lokasi_penelitian || '';
+                            document.getElementById('metode_penelitian').value = speciesData.metode_penelitian || '';
+                            document.getElementById('tanggal_penelitian').value = speciesData.tanggal_penelitian || '';
+
+                            currentImages = speciesData.gambar || [];
+                            renderImagePreviews();
+
+                            currentMapGeoJSON = speciesData.peta_persebaran || [];
+                            console.log('Loaded species map data for edit mode:', currentMapGeoJSON);
+
+                        } else {
+                            console.error('Data spesies tidak ditemukan untuk indeks ini:', editIndex);
+                            showNotification('Data spesies tidak ditemukan.', 'error');
+                            window.location.href = 'daftarSpesies.html'; // Redirect if data not found
+                        }
+                    } catch (e) {
+                        console.error('Error parsing allSpeciesRecords from sessionStorage:', e);
+                        showNotification('Terjadi kesalahan saat memuat data spesies.', 'error');
+                        window.location.href = 'daftarSpesies.html'; // Redirect on error
+                    }
+                } else {
+                    console.log('Tidak ada record spesies di sessionStorage.');
+                    showNotification('Tidak ada data spesies untuk diedit.', 'error');
+                    window.location.href = 'daftarSpesies.html'; // Redirect if no records
+                }
+            } else {
+                console.error('Tidak ada editIndex yang ditemukan di URL. Mengarahkan ke daftar spesies.');
+                window.location.href = 'daftarSpesies.html'; // Always redirect if no editIndex
+            }
+
+            // 2. AMBIL DATA PETA TERBARU DARI TAMBAH PETA DULU (PRIORITAS TERTINGGI UNTUK PETA)
+            const mapsFromPeta = sessionStorage.getItem('allSavedMaps');
+            if (mapsFromPeta) {
+                try {
+                    const parsedMapsFromPeta = JSON.parse(mapsFromPeta);
+                    if (parsedMapsFromPeta && parsedMapsFromPeta.length > 0) {
+                        currentMapGeoJSON = parsedMapsFromPeta;
+                        console.log('Loaded allSavedMaps into currentMapGeoJSON:', currentMapGeoJSON);
+                    } else if (parsedMapsFromPeta && parsedMapsFromPeta.length === 0) {
+                        currentMapGeoJSON = [];
+                        console.log('allSavedMaps is empty, clearing currentMapGeoJSON.');
+                    }
+                    sessionStorage.removeItem('allSavedMaps'); // Penting: Hapus setelah digunakan
+                } catch (e) {
+                    console.error('Error parsing allSavedMaps from sessionStorage on load:', e);
+                    sessionStorage.removeItem('allSavedMaps');
+                    showNotification('Terjadi kesalahan saat memuat peta. Data mungkin korup.', 'error');
+                }
+            }
+
+
+            // --- Map Logic ---
+            const miniMap = L.map('miniMap').setView([3.4333, 117.6500], 8);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(miniMap);
+
+            const loadedMapLayers = L.featureGroup().addTo(miniMap);
+
+            // Fungsi untuk menyimpan semua data formulir ke sessionStorage
+            // Ini digunakan saat navigasi ke tambahPeta.html untuk mempertahankan input form
+            function saveFormDataToSessionTemp() {
+                const formData = {
+                    nama_umum: document.getElementById('nama_umum').value,
+                    nama_latin: document.getElementById('nama_latin').value,
+                    filum: document.getElementById('filum').value,
+                    kelas: document.getElementById('kelas').value,
+                    sub_kelas: document.getElementById('sub_kelas').value,
+                    deskripsi: document.getElementById('deskripsi').value,
+                    peran_ekologis: document.getElementById('peran_ekologis').value,
+                    status_konservasi: document.getElementById('status_konservasi').value,
+                    nama_peneliti: document.getElementById('nama_peneliti').value,
+                    lokasi_penelitian: document.getElementById('lokasi_penelitian').value,
+                    metode_penelitian: document.getElementById('metode_penelitian').value,
+                    tanggal_penelitian: document.getElementById('tanggal_penelitian').value,
+                    gambar: currentImages,
+                };
+                // Simpan ke temp session storage untuk editSpesies.html
+                sessionStorage.setItem('tempEditSpeciesFormData', JSON.stringify(formData));
+                console.log('Form data (excluding map) saved to tempEditSpeciesFormData:', formData);
+            }
+
+            // Load temporary form data if available (e.g., after returning from map editing)
+            const tempEditFormDataString = sessionStorage.getItem('tempEditSpeciesFormData');
+            if (tempEditFormDataString) {
+                try {
+                    const tempEditFormData = JSON.parse(tempEditFormDataString);
+                    document.getElementById('nama_umum').value = tempEditFormData.nama_umum || '';
+                    document.getElementById('nama_latin').value = tempEditFormData.nama_latin || '';
+                    document.getElementById('filum').value = tempEditFormData.filum || '';
+                    document.getElementById('kelas').value = tempEditFormData.kelas || '';
+                    document.getElementById('sub_kelas').value = tempEditFormData.sub_kelas || '';
+                    document.getElementById('deskripsi').value = tempEditFormData.deskripsi || '';
+                    document.getElementById('peran_ekologis').value = tempEditFormData.peran_ekologis || '';
+                    document.getElementById('status_konservasi').value = tempEditFormData.status_konservasi || '';
+                    document.getElementById('nama_peneliti').value = tempEditFormData.nama_peneliti || '';
+                    document.getElementById('lokasi_penelitian').value = tempEditFormData.lokasi_penelitian || '';
+                    document.getElementById('metode_penelitian').value = tempEditFormData.metode_penelitian || '';
+                    document.getElementById('tanggal_penelitian').value = tempEditFormData.tanggal_penelitian || '';
+
+                    currentImages = tempEditFormData.gambar || [];
+                    renderImagePreviews();
+
+                    sessionStorage.removeItem('tempEditSpeciesFormData');
+                    console.log('tempEditSpeciesFormData removed from sessionStorage.');
+                } catch (e) {
+                    console.error('Error parsing tempEditSpeciesFormData from sessionStorage:', e);
+                    sessionStorage.removeItem('tempEditSpeciesFormData');
+                }
+            }
+
+
+            function renderAllSavedMaps() {
+                mapListContainer.innerHTML = '';
+                loadedMapLayers.clearLayers();
+
+                let mapsToRender = currentMapGeoJSON;
+
+                if (mapsToRender.length === 0) {
+                    console.log("Tidak ada peta tersimpan.");
+                    return;
+                }
+
+                let bounds = new L.LatLngBounds([]);
+
+                mapsToRender.forEach((mapCollection, index) => {
+                    const layer = L.geoJSON(mapCollection, {
+                        style: {
+                            color: '#007bff',
+                            weight: 3,
+                            fillColor: '#007bff',
+                            fillOpacity: 0.2
+                        }
+                    }).addTo(loadedMapLayers);
+
+                    if (layer.getBounds().isValid()) {
+                        bounds.extend(layer.getBounds());
+                    }
+
+                    const newMapItem = document.createElement('div');
+                    newMapItem.className = 'flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200';
+                    newMapItem.dataset.mapIndex = index;
+
+                    newMapItem.innerHTML = `
+                        <span class="text-gray-800">Peta ${index + 1}</span>
+                        <div class="flex items-center space-x-3">
+                            <button class="text-gray-500 hover:text-gray-700 transition-colors view-map-btn" title="Lihat Peta"><i class="fas fa-eye"></i></button>
+                            <button class="text-gray-500 hover:text-gray-700 transition-colors edit-map-btn" title="Edit Peta"><i class="fas fa-pencil-alt"></i></button>
+                            <button class="text-gray-500 hover:text-gray-700 transition-colors delete-map-btn" title="Hapus Peta"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    mapListContainer.appendChild(newMapItem);
+
+                    const deleteButton = newMapItem.querySelector('.delete-map-btn');
+                    if (deleteButton) {
+                        deleteButton.addEventListener('click', function () {
+                            const mapIndexToDelete = parseInt(this.closest('div[data-map-index]').dataset.mapIndex);
+                            currentMapGeoJSON.splice(mapIndexToDelete, 1);
+                            console.log(`Peta ${mapIndexToDelete + 1} dihapus dari daftar.`);
+                            showNotification('Peta berhasil dihapus dari daftar.', 'success');
+                            renderAllSavedMaps();
+                        });
+                    }
+
+                    const viewButton = newMapItem.querySelector('.view-map-btn');
+                    if (viewButton) {
+                        viewButton.addEventListener('click', function () {
+                            loadedMapLayers.clearLayers();
+                            const selectedMapIndex = parseInt(this.closest('div[data-map-index]').dataset.mapIndex);
+                            const mapToDisplay = mapsToRender[selectedMapIndex];
+
+                            L.geoJSON(mapToDisplay, {
+                                style: {
+                                    color: '#007bff',
+                                    weight: 3,
+                                    fillColor: '#007bff',
+                                    fillOpacity: 0.2
+                                }
+                            }).addTo(loadedMapLayers);
+
+                            if (loadedMapLayers.getLayers().length > 0) {
+                                miniMap.fitBounds(loadedMapLayers.getBounds());
+                            }
+                        });
+                    }
+
+                    const editMapBtn = newMapItem.querySelector('.edit-map-btn');
+                    if (editMapBtn) {
+                        editMapBtn.addEventListener('click', function () {
+                            const selectedMapIndex = parseInt(this.closest('div[data-map-index]').dataset.mapIndex);
+                            saveFormDataToSessionTemp(); // Simpan data formulir sebelum navigasi!
+                            sessionStorage.setItem('allSavedMaps', JSON.stringify(currentMapGeoJSON));
+                            window.location.href = `tambahPeta.html?editMapFromSpeciesIndex=${editIndex}&mapIndexToEdit=${selectedMapIndex}`;
+                        });
+                    }
+                });
+
+                if (bounds.isValid()) {
+                    miniMap.fitBounds(bounds);
+                } else {
+                    miniMap.setView([3.4333, 117.6500], 8);
+                }
+            }
+
+            addMapButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                saveFormDataToSessionTemp(); // Simpan data formulir sebelum navigasi!
+                sessionStorage.setItem('allSavedMaps', JSON.stringify(currentMapGeoJSON));
+                window.location.href = `tambahPeta.html?editMapFromSpeciesIndex=${editIndex}`; // Arahkan ke tambahPeta dengan editIndex
+            });
+
+            viewAllMapsButton.addEventListener('click', function () {
+                console.log('editSpesies.html: Viewing all saved maps.');
+                renderAllSavedMaps();
+            });
+
+            window.addEventListener('resize', function () {
+                miniMap.invalidateSize();
+            });
+
+
+            // --- Image Upload Logic ---
+            function renderImagePreviews() {
+                imagePreviewContainer.innerHTML = '';
+                currentImages.forEach((base64Image, index) => {
+                    imageCounter++;
+
+                    const itemWrapper = document.createElement('div');
+                    itemWrapper.className = 'flex flex-col items-center space-y-2';
+
+                    const thumbnailDiv = document.createElement('div');
+                    thumbnailDiv.className = 'relative w-32 h-32 border border-gray-300 rounded-lg flex-shrink-0 overflow-hidden';
+                    thumbnailDiv.id = `image-thumbnail-${imageCounter}`;
+
+                    const img = document.createElement('img');
+                    img.src = base64Image;
+                    img.alt = `Uploaded Image ${imageCounter}`;
+                    img.className = 'w-full h-full object-cover';
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 text-xs hover:bg-red-600 transition-colors z-10';
+                    deleteButton.innerHTML = '<i class="fas fa-times"></i>';
+                    deleteButton.title = 'Hapus Gambar';
+                    deleteButton.addEventListener('click', function () {
+                        itemWrapper.remove();
+                        currentImages.splice(index, 1);
+                        showNotification('Gambar berhasil dihapus.', 'success');
+                        console.log(`Gambar di indeks ${index} dihapus.`);
+                    });
+
+                    const fileNameSpan = document.createElement('span');
+                    fileNameSpan.className = 'text-gray-700 text-sm truncate w-32 text-center';
+                    fileNameSpan.textContent = `Image ${index + 1}`;
+
+                    thumbnailDiv.appendChild(img);
+                    thumbnailDiv.appendChild(deleteButton);
+                    itemWrapper.appendChild(thumbnailDiv);
+                    itemWrapper.appendChild(fileNameSpan);
+
+                    imagePreviewContainer.appendChild(itemWrapper);
+                });
+            }
+
+
+            imageUploadInput.addEventListener('change', function (event) {
+                const files = event.target.files;
+                console.log(`Jumlah file yang dipilih: ${files.length}`);
+
+                if (files.length > 0) {
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        console.log(`Memproses file ${i + 1}: ${file.name}, Tipe: ${file.type}`);
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function (e) {
+                                console.log(`FileReader berhasil memuat untuk ${file.name}`);
+                                currentImages.push(e.target.result);
+                                renderImagePreviews();
+                                showNotification('Gambar berhasil diunggah.', 'success');
+                            };
+                            reader.onerror = function () {
+                                console.error(`Gagal memuat file: ${file.name}`);
+                                showNotification(`Gagal memuat gambar: ${file.name}.`, 'error');
+                            };
+                            reader.readAsDataURL(file);
+                        } else {
+                            console.log(`File ${file.name} bukan file gambar. Melewatkan.`);
+                            showNotification(`File ${file.name} bukan format gambar yang didukung (JPG/PNG).`, 'error');
+                        }
+                    }
+                }
+            });
+
+            // --- Form Submission Logic ---
+            saveButton.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                const nama_umum = document.getElementById('nama_umum').value;
+                const nama_latin = document.getElementById('nama_latin').value;
+                const filum = document.getElementById('filum').value;
+                const kelas = document.getElementById('kelas').value;
+                const sub_kelas = document.getElementById('sub_kelas').value;
+                const deskripsi = document.getElementById('deskripsi').value;
+                const peran_ekologis = document.getElementById('peran_ekologis').value;
+                const status_konservasi = document.getElementById('status_konservasi').value;
+                const nama_peneliti = document.getElementById('nama_peneliti').value;
+                const lokasi_penelitian = document.getElementById('lokasi_penelitian').value;
+                const metode_penelitian = document.getElementById('metode_penelitian').value;
+                const tanggal_penelitian = document.getElementById('tanggal_penelitian').value;
+
+                const peta_persebaran = currentMapGeoJSON;
+
+                const updatedSpeciesData = {
+                    nama_umum,
+                    nama_latin,
+                    filum,
+                    kelas,
+                    sub_kelas,
+                    gambar: currentImages,
+                    deskripsi,
+                    peta_persebaran,
+                    peran_ekologis,
+                    status_konservasi,
+                    nama_peneliti,
+                    lokasi_penelitian,
+                    metode_penelitian,
+                    tanggal_penelitian,
+                    status_publikasi: 'Unpublish' // Tetap 'Unpublish' atau ambil dari data asli jika ingin mempertahankan status
+                };
+
+                const allSpeciesRecordsString = sessionStorage.getItem('allSpeciesRecords');
+                let allSpeciesRecords = allSpeciesRecordsString ? JSON.parse(allSpeciesRecordsString) : [];
+
+                try {
+                    if (editIndex !== null && allSpeciesRecords[editIndex]) {
+                        allSpeciesRecords[editIndex] = updatedSpeciesData;
+                        console.log('Species data updated at index', editIndex, updatedSpeciesData);
+                        sessionStorage.setItem('notificationMessage', 'Data spesies berhasil diperbarui!');
+                        sessionStorage.setItem('notificationType', 'success');
+                    } else {
+                        console.error('Error: editIndex tidak valid atau spesies tidak ditemukan untuk diperbarui.');
+                        showNotification('Gagal memperbarui data: Spesies tidak ditemukan.', 'error');
+                        return; // Hentikan proses jika editIndex tidak valid
+                    }
+
+                    sessionStorage.setItem('allSpeciesRecords', JSON.stringify(allSpeciesRecords));
+                    console.log('allSpeciesRecords saved to sessionStorage.');
+
+                    sessionStorage.removeItem('allSavedMaps');
+                    console.log('Cleared allSavedMaps from sessionStorage.');
+
+                    window.location.href = 'daftarSpesies.html';
+                } catch (e) {
+                    console.error('Error saving allSpeciesRecords to sessionStorage:', e);
+                    showNotification('Gagal menyimpan data spesies. Data mungkin terlalu besar.', 'error');
+                }
+            });
+
+            cancelButton.addEventListener('click', function () {
+                sessionStorage.removeItem('allSavedMaps');
+                sessionStorage.removeItem('tempEditSpeciesFormData');
+                console.log('Cancelled, cleared allSavedMaps and temp form data, navigating to daftarSpesies.html.');
+                window.location.href = 'daftarSpesies.html';
+            });
+
+            // Pastikan peta ter-render setelah DOMContentLoaded dan semua data dimuat
+            renderAllSavedMaps();
+        });
+    </script>
+</body>
+
+</html>

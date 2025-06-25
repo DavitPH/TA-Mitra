@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Spesies Invertebrata</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Fixed Sidebar Styling */
+        .fixed-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 50;
+        }
+
+        /* Adjust main content margin to prevent overlap with fixed sidebar */
+        .main-content-margin {
+            margin-left: 16rem;
+        }
+
+        /* Styling for modals (mapModal, confirmModal) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Styling for the map inside the modal */
+        #modalMap {
+            height: 400px;
+            width: 100%;
+            border-radius: 0.5rem;
+        }
+
+        /* Notification styling */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            display: none;
+            /* Hidden by default */
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .fixed-sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-radius: 0;
+            }
+
+            .main-content-margin {
+                margin-left: 0;
+            }
+
+            .flex-col.md\:flex-row {
+                flex-direction: column;
+            }
+        }
+
+        .toggle-status {
+            cursor: pointer;
+        }
+
+        /* New style for the "No." column to make it narrower */
+        .table-col-no {
+            width: 1%;
+            /* Make it as narrow as possible */
+            white-space: nowrap;
+            /* Prevent wrapping */
+            text-align: center;
+            /* Center the number */
+            padding-left: 0.75rem;
+            /* px-3 */
+            padding-right: 0.75rem;
+            /* px-3 */
+        }
+
+        /* Paginasi styles */
+        .pagination-button {
+            @apply flex items-center justify-center min-w-[36px] h-9 px-3 text-sm font-semibold cursor-pointer;
+            /* Hapus @apply border-t, border-b, border-l, border-r di sini */
+            @apply bg-white text-gray-700 hover:bg-gray-100 transition-colors duration-200;
+        }
+
+        /* Tombol aktif */
+        .pagination-button.active {
+            @apply bg-[#F97A00] text-white border-[#F97A00] hover:bg-[#E06C00];
+        }
+
+        /* Tombol disabled */
+        .pagination-button.disabled {
+            @apply opacity-50 cursor-not-allowed bg-gray-100 text-gray-400;
+        }
+
+        /* Styling untuk ellipsis (jika ada) */
+        .pagination-ellipsis {
+            @apply flex items-center justify-center min-w-[36px] h-9 px-3 text-gray-700 text-sm;
+            /* Tambahkan border jika ellipsis juga ingin terpisah */
+            @apply border border-gray-300 rounded-lg;
+            /* Tambahkan ini jika Anda ingin ellipsis juga berbingkai */
+        }
+
+        /* Custom Orange for 'Tambah Data' button */
+        .bg-orange-custom {
+            background-color: #F97A00;
+        }
+
+        .hover\:bg-orange-darker-custom:hover {
+            background-color: #E06C00;
+            /* Sedikit lebih gelap untuk hover */
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+
+    <aside class="w-64 bg-green-700 text-white flex flex-col p-4 rounded-r-lg shadow-lg fixed-sidebar">
+        <div class="flex items-center justify-center mb-10 mt-4">
+            <div class="w-20 h-20 flex items-center justify-center p-2">
+                <img src="logo.png" alt="Snail Logo" class="w-full h-full object-contain">
+            </div>
+        </div>
+        <nav class="flex-grow">
+            <ul>
+                <li class="mb-4">
+                    <a href="daftarSpesies.html" class="flex items-center p-3 rounded-lg bg-green-800 shadow-md">
+                        <i class="fas fa-bug text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Invertebrata</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarKomentar.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-comment-alt text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Komentar</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-green-600">
+            <a href="login.html" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                <i class="fas fa-sign-out-alt text-xl mr-3"></i>
+                <span class="font-medium text-lg">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 main-content-margin">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Daftar Spesies</h1>
+        </header>
+
+        <div id="notification" class="notification text-white font-semibold"></div>
+
+        <section class="flex flex-col md:flex-row items-center justify-between bg-white p-6 rounded-xl shadow-md mb-8">
+            <div class="relative flex-grow w-full md:w-auto mr-0 md:mr-4 mb-4 md:mb-0">
+                <input type="text" placeholder="Cari spesies..." id="searchInput"
+                    class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
+                <button
+                    class="flex items-center justify-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors">
+                    <i class="fas fa-filter mr-2"></i>
+                    Filter
+                </button>
+                <a href="tambahSpesies.html"
+                    class="px-6 py-3 bg-orange-custom text-white font-semibold rounded-lg shadow-md hover:bg-orange-darker-custom transition-colors flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Tambah Data
+                </a>
+            </div>
+        </section>
+
+        <section class="bg-white p-8 rounded-xl shadow-md">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider table-col-no">
+                                No.
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Nama Umum
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Nama Latin
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Filum
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Kelas
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Sub Kelas
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status Publikasi
+                            </th>
+                            <th scope="col"
+                                class="relative px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Aksi
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="speciesTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyTableMessage" class="text-center text-gray-500 py-4 hidden">
+                Tidak ada data spesies yang ditemukan.
+            </div>
+        </section>
+
+        <div class="flex flex-col md:flex-row items-center justify-between mt-8">
+            <div class="mb-4 md:mb-0 text-gray-700">
+                Menampilkan <span id="paginationInfoStart">0</span> sampai <span id="paginationInfoEnd">0</span> dari
+                <span id="paginationInfoTotal">0</span> entri
+            </div>
+
+            <nav class="flex justify-end">
+                <div class="inline-flex rounded-md shadow-sm -space-x-px" role="group">
+                    <button type="button" id="prevPageButton"
+                        class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 hover:text-orange-700 focus:z-10 focus:ring-2 focus:ring-orange-700 focus:text-orange-700">
+                        Previous
+                    </button>
+                    <div id="pageNumbersContainer" class="inline-flex">
+                    </div>
+                    <button type="button" id="nextPageButton"
+                        class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-md hover:bg-gray-100 hover:text-orange-700 focus:z-10 focus:ring-2 focus:ring-orange-700 focus:text-orange-700">
+                        Next
+                    </button>
+                </div>
+            </nav>
+
+            <div class="flex items-center text-gray-700 mt-4 md:mt-0">
+                <span class="mr-2">Rows Per Page:</span>
+                <div class="relative inline-block text-left">
+                    <select id="rowsPerPageSelect"
+                        class="block appearance-none w-full bg-white border border-gray-300 hover:border-gray-400 px-4 py-2 pr-8 rounded-lg shadow leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="mapModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 class="text-2xl font-semibold mb-4">Peta Persebaran Spesies</h3>
+            <div id="modalMap"></div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal">
+        <div class="modal-content max-w-sm">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800" id="confirmModalTitle"></h3>
+            <p class="text-gray-700 mb-6" id="confirmModalMessage"></p>
+            <div class="flex justify-end space-x-4">
+                <button id="cancelConfirmButton"
+                    class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors">
+                    Batal
+                </button>
+                <button id="confirmActionButton"
+                    class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors">
+                    Ya
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const speciesTableBody = document.getElementById('speciesTableBody');
+            const notificationDiv = document.getElementById('notification');
+
+            const mapModal = document.getElementById('mapModal');
+            const closeModalButton = mapModal.querySelector('.close-button');
+            let modalMapInstance = null; // Instance peta Leaflet di modal
+
+            const confirmModal = document.getElementById('confirmModal');
+            const confirmActionButton = document.getElementById('confirmActionButton');
+            const cancelConfirmButton = document.getElementById('cancelConfirmButton');
+            const confirmModalTitle = document.getElementById('confirmModalTitle');
+            const confirmModalMessage = document.getElementById('confirmModalMessage');
+            let actionToConfirm = null;
+            let itemIndexToConfirm = null;
+            let speciesDataForConfirmation = null;
+
+            // Element HTML yang diperbarui ID-nya
+            const searchInput = document.getElementById('searchInput');
+            const emptyTableMessage = document.getElementById('emptyTableMessage');
+            const paginationInfoStart = document.getElementById('paginationInfoStart');
+            const paginationInfoEnd = document.getElementById('paginationInfoEnd');
+            const paginationInfoTotal = document.getElementById('paginationInfoTotal');
+            const prevPageButton = document.getElementById('prevPageButton');
+            const nextPageButton = document.getElementById('nextPageButton');
+            const pageNumbersContainer = document.getElementById('pageNumbersContainer');
+            const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
+
+            let allSpeciesData = []; // Ini akan menampung semua data spesies
+            let filteredSpeciesData = []; // Data setelah filter/pencarian
+            let currentPage = 1;
+            let rowsPerPage; // Definisikan di sini, akan diinisialisasi setelah elements tersedia
+
+            // --- Fungsi Notifikasi ---
+            function showNotification(message, type = 'success') {
+                notificationDiv.textContent = message;
+                notificationDiv.className = 'notification text-white font-semibold'; // Reset classes
+
+                if (type === 'success') {
+                    notificationDiv.classList.add('bg-green-500');
+                } else if (type === 'error') {
+                    notificationDiv.classList.add('bg-red-500');
+                } else if (type === 'info') { // Added info type
+                    notificationDiv.classList.add('bg-blue-500');
+                } else {
+                    notificationDiv.classList.add('bg-gray-500'); // Default
+                }
+
+                notificationDiv.style.display = 'block';
+                setTimeout(() => {
+                    notificationDiv.style.display = 'none';
+                }, 3000); // Hide after 3 seconds
+            }
+
+            // Memuat dan menampilkan notifikasi dari sessionStorage (jika ada)
+            const notificationMessage = sessionStorage.getItem('notificationMessage');
+            const notificationType = sessionStorage.getItem('notificationType');
+            if (notificationMessage && notificationType) {
+                showNotification(notificationMessage, notificationType);
+                sessionStorage.removeItem('notificationMessage');
+                sessionStorage.removeItem('notificationType');
+            }
+
+            // --- Fungsi untuk Memuat Data dari Session Storage ---
+            function loadSpeciesData() {
+                const storedData = sessionStorage.getItem('allSpeciesRecords');
+                if (storedData) {
+                    try {
+                        allSpeciesData = JSON.parse(storedData);
+                        console.log('Data spesies berhasil dimuat dari sessionStorage:', allSpeciesData);
+                    } catch (e) {
+                        console.error('Gagal mengurai data spesies dari sessionStorage:', e);
+                        allSpeciesData = [];
+                        showNotification('Data spesies rusak, tidak dapat dimuat.', 'error');
+                    }
+                } else {
+                    allSpeciesData = [];
+                    console.log('Tidak ada data spesies di sessionStorage.');
+                }
+                // Inisialisasi rowsPerPage di sini, setelah rowsPerPageSelect dipastikan ada
+                rowsPerPage = parseInt(rowsPerPageSelect.value);
+                applySearchAndFilter(); // Terapkan pencarian/filter setelah memuat data
+            }
+
+            // --- Fungsi untuk Menerapkan Pencarian dan Filter ---
+            function applySearchAndFilter() {
+                const searchTerm = searchInput.value.toLowerCase();
+
+                // Filter berdasarkan nama umum, nama latin, filum, kelas, sub kelas
+                filteredSpeciesData = allSpeciesData.filter(species => {
+                    return (
+                        (species.nama_umum && species.nama_umum.toLowerCase().includes(searchTerm)) ||
+                        (species.nama_latin && species.nama_latin.toLowerCase().includes(searchTerm)) ||
+                        (species.filum && species.filum.toLowerCase().includes(searchTerm)) ||
+                        (species.kelas && species.kelas.toLowerCase().includes(searchTerm)) ||
+                        (species.sub_kelas && species.sub_kelas.toLowerCase().includes(searchTerm))
+                    );
+                });
+                currentPage = 1; // Reset ke halaman pertama setelah filter/pencarian
+                renderTableAndPagination();
+            }
+
+            // --- Fungsi untuk Merender Tabel dan Paginasi ---
+            function renderTableAndPagination() {
+                speciesTableBody.innerHTML = ''; // Bersihkan tabel sebelumnya
+
+                const totalRecords = filteredSpeciesData.length;
+                const totalPages = Math.ceil(totalRecords / rowsPerPage);
+
+                // Sesuaikan halaman saat ini jika berada di luar batas
+                if (currentPage > totalPages && totalPages > 0) {
+                    currentPage = totalPages;
+                } else if (currentPage === 0 && totalPages > 0) {
+                    currentPage = 1;
+                } else if (totalPages === 0) {
+                    currentPage = 0; // Tidak ada halaman jika tidak ada data
+                }
+
+                const startIndex = (currentPage - 1) * rowsPerPage;
+                const endIndex = Math.min(startIndex + rowsPerPage, totalRecords);
+                const speciesToDisplay = filteredSpeciesData.slice(startIndex, endIndex);
+
+                if (speciesToDisplay.length === 0) {
+                    emptyTableMessage.classList.remove('hidden');
+                    // Perbarui info entri jika tidak ada data
+                    paginationInfoStart.textContent = 0;
+                    paginationInfoEnd.textContent = 0;
+                    paginationInfoTotal.textContent = 0;
+                    pageNumbersContainer.innerHTML = ''; // Kosongkan paginasi
+                } else {
+                    emptyTableMessage.classList.add('hidden');
+                    speciesToDisplay.forEach((species, i) => {
+                        // Gunakan indeks asli dari allSpeciesData untuk tindakan seperti edit/hapus
+                        // Ini penting karena filteredData bisa berubah urutan/jumlahnya
+                        const originalIndex = allSpeciesData.indexOf(species);
+
+                        const row = document.createElement('tr');
+                        row.className = i % 2 === 0 ? 'bg-white' : 'bg-gray-50'; // Alternating row colors
+                        row.innerHTML = `
+                            <td class="px-3 py-4 text-sm text-gray-500 table-col-no">
+                                ${startIndex + i + 1} </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                ${species.nama_umum || '-'}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500 italic">
+                                ${species.nama_latin || '-'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${species.filum || '-'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${species.kelas || '-'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${species.sub_kelas || '-'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${species.status_publikasi === 'Publish' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} toggle-status cursor-pointer" data-index="${originalIndex}">
+                                    ${species.status_publikasi || 'Unpublish'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
+                                <a href="detailSpesies.html?index=${originalIndex}" class="text-gray-500 hover:text-gray-700 mr-3 view-detail-btn" title="Lihat Detail">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="editSpesies.html?editIndex=${originalIndex}" class="text-gray-500 hover:text-gray-700 mr-3 edit-btn" title="Edit Data">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="text-gray-500 hover:text-gray-700 delete-btn" data-index="${originalIndex}" title="Hapus Data">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        speciesTableBody.appendChild(row);
+                    });
+                }
+
+                updatePaginationControls(totalPages, totalRecords, startIndex, endIndex);
+                attachEventListeners(); // Re-attach event listeners for new buttons
+            }
+
+            // --- Fungsi untuk Memperbarui Kontrol Paginasi ---
+            function updatePaginationControls(totalPages, totalRecords, startIndex, endIndex) {
+                // Update pagination info text
+                paginationInfoStart.textContent = totalRecords === 0 ? 0 : startIndex + 1;
+                paginationInfoEnd.textContent = endIndex;
+                paginationInfoTotal.textContent = totalRecords;
+
+                // Clear previous page numbers
+                pageNumbersContainer.innerHTML = '';
+
+                // Add page number buttons
+                if (totalPages > 0) {
+                    let maxPageButtons = 5; // Maksimal 5 tombol halaman terlihat
+                    let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+                    let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+                    // Adjust if we are near the end
+                    if (endPage - startPage + 1 < maxPageButtons) {
+                        startPage = Math.max(1, endPage - maxPageButtons + 1);
+                    }
+
+                    // Add "..." if needed at the beginning
+                    if (startPage > 1) {
+                        const firstPageButton = document.createElement('button');
+                        firstPageButton.textContent = '1';
+                        firstPageButton.classList.add(
+                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                            'text-gray-900', 'bg-white', 'border-r', 'border-gray-200', // Border default 
+                            'hover:bg-gray-100', 'hover:text-orange-700',
+                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
+                        );
+                        firstPageButton.addEventListener('click', () => {
+                            currentPage = 1;
+                            renderTableAndPagination();
+                        });
+                        pageNumbersContainer.appendChild(firstPageButton);
+                        if (startPage > 2) {
+                            const ellipsisSpan = document.createElement('span');
+                            ellipsisSpan.textContent = '...';
+                            ellipsisSpan.classList.add(
+                                'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                                'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200' // Border di 3 sisi
+                            );
+                            pageNumbersContainer.appendChild(ellipsisSpan);
+                        }
+                    }
+
+                    for (let i = startPage; i <= endPage; i++) {
+                        const pageButton = document.createElement('button');
+                        pageButton.textContent = i;
+
+                        // Kelas dasar untuk tombol nomor halaman
+                        pageButton.classList.add(
+                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200', // Border top, bottom, left
+                            'hover:bg-gray-100', 'hover:text-orange-700',
+                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
+                        );
+
+                        // Tambahkan rounded-l-lg jika ini tombol pertama dan tidak ada tombol "1" yang dibuat terpisah
+                        if (i === startPage && startPage === 1) {
+                            pageButton.classList.add('border-r');
+                        }
+                        // Atau jika ini adalah tombol pertama dalam rentang dinamis (startPage > 1)
+                        else if (i === startPage && startPage > 1) {
+                            // Ini akan menangani border-l jika ada ellipsis sebelumnya
+                        }
+
+
+                        // Jika ini adalah halaman aktif, tambahkan kelas gaya aktif yang Anda inginkan
+                        if (i === currentPage) {
+                            // Hapus kelas non-aktif yang akan digantikan
+                            pageButton.classList.remove(
+                                'text-gray-900', 'bg-white', 'border-gray-200', 'hover:bg-gray-100', 'hover:text-orange-700', 'focus:text-orange-700', 'focus:ring-orange-700'
+                            );
+                            // Tambahkan kelas aktif
+                            pageButton.classList.add(
+                                'text-white', 'bg-orange-500', 'border-orange-500', 'hover:bg-orange-600',
+                                'focus:text-white', 'focus:ring-white' // Ring focus putih agar tidak orange
+                            );
+                        }
+
+                        pageButton.addEventListener('click', () => {
+                            currentPage = i;
+                            renderTableAndPagination();
+                        });
+                        pageNumbersContainer.appendChild(pageButton);
+                    }
+
+                    // Add "..." if needed at the end
+                    if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) {
+                            const ellipsisSpan = document.createElement('span');
+                            ellipsisSpan.textContent = '...';
+                            ellipsisSpan.classList.add(
+                                'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                                'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200'
+                            );
+                            pageNumbersContainer.appendChild(ellipsisSpan);
+                        }
+                        const lastPageButton = document.createElement('button');
+                        lastPageButton.textContent = totalPages;
+                        lastPageButton.classList.add(
+                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200', // Border top, bottom, left
+                            'hover:bg-gray-100', 'hover:text-orange-700',
+                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
+                        );
+                        lastPageButton.addEventListener('click', () => {
+                            currentPage = totalPages;
+                            renderTableAndPagination();
+                        });
+                        pageNumbersContainer.appendChild(lastPageButton);
+                    }
+
+                    // Tambahkan border-r dan rounded-r-lg ke tombol paling kanan di pageNumbersContainer
+                    if (pageNumbersContainer.lastChild) {
+                        pageNumbersContainer.lastChild.classList.add('border-r');
+                        // Tidak perlu menambahkan border-l lagi jika sudah ditambahkan di loop
+                        // pageNumbersContainer.lastChild.classList.add('border-l'); 
+                    }
+                }
+
+                // Update Previous/Next button states
+                prevPageButton.classList.toggle('disabled', currentPage === 1 || totalPages === 0);
+                nextPageButton.classList.toggle('disabled', currentPage === totalPages || totalPages === 0);
+            }
+
+            // --- Fungsi untuk Toggle Status Publikasi ---
+            function togglePublicationStatus(index) {
+                if (index >= 0 && index < allSpeciesData.length) {
+                    allSpeciesData[index].status_publikasi =
+                        allSpeciesData[index].status_publikasi === 'Publish' ? 'Unpublish' : 'Publish';
+                    sessionStorage.setItem('allSpeciesRecords', JSON.stringify(allSpeciesData));
+                    showNotification(`Status publikasi diubah menjadi '${allSpeciesData[index].status_publikasi}'.`, 'success');
+                    applySearchAndFilter(); // Render ulang tabel untuk update tampilan
+                }
+            }
+
+            // --- Fungsi untuk Menghapus Spesies ---
+            function deleteSpecies(index) {
+                if (index >= 0 && index < allSpeciesData.length) {
+                    allSpeciesData.splice(index, 1); // Hapus dari array utama
+                    sessionStorage.setItem('allSpeciesRecords', JSON.stringify(allSpeciesData));
+                    showNotification('Data spesies berhasil dihapus.', 'success');
+                    applySearchAndFilter(); // Render ulang tabel setelah penghapusan
+                }
+            }
+
+            // --- Fungsi untuk Menampilkan Peta di Modal ---
+            function showMapInModal(speciesIndex) {
+                const species = allSpeciesData[speciesIndex];
+                if (!species || !species.peta_persebaran || species.peta_persebaran.length === 0) {
+                    showNotification('Tidak ada data peta untuk spesies ini.', 'info');
+                    return;
+                }
+
+                mapModal.style.display = 'flex';
+
+                // Inisialisasi peta jika belum ada
+                if (modalMapInstance) {
+                    modalMapInstance.remove(); // Hapus instance sebelumnya jika ada
+                }
+                // Pastikan div modalMap sudah terlihat sebelum menginisialisasi peta
+                modalMapInstance = L.map('modalMap').setView([3.4333, 117.6500], 8); // Contoh koordinat awal
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }).addTo(modalMapInstance);
+
+                const drawnLayers = L.featureGroup().addTo(modalMapInstance);
+                let bounds = new L.LatLngBounds([]);
+
+                species.peta_persebaran.forEach(geoJsonItem => {
+                    // Pastikan geoJsonItem adalah objek GeoJSON yang valid
+                    if (typeof geoJsonItem === 'object' && geoJsonItem !== null && geoJsonItem.type) {
+                        const layer = L.geoJSON(geoJsonItem, {
+                            style: {
+                                color: '#007bff', // Warna untuk peta persebaran
+                                weight: 3,
+                                fillColor: '#007bff',
+                                fillOpacity: 0.2
+                            }
+                        }).addTo(drawnLayers);
+                        if (layer.getBounds().isValid()) {
+                            bounds.extend(layer.getBounds());
+                        }
+                    } else {
+                        console.warn('Item peta tidak valid:', geoJsonItem);
+                    }
+                });
+
+                // Sesuaikan tampilan peta agar mencakup semua lapisan yang digambar
+                if (bounds.isValid()) {
+                    modalMapInstance.fitBounds(bounds, { padding: [50, 50] });
+                } else {
+                    modalMapInstance.setView([3.4333, 117.6500], 8); // Default view if no valid bounds
+                }
+                // Penting: invalidateSize setelah modal terlihat untuk memastikan peta di-render dengan benar
+                // Penundaan sedikit seringkali membantu browser untuk menghitung ulang layout
+                setTimeout(() => {
+                    modalMapInstance.invalidateSize();
+                }, 100);
+            }
+
+            // --- Attach Event Listeners ---
+            // Menggunakan event delegation pada speciesTableBody untuk tombol-tombol yang dinamis
+            function attachEventListeners() {
+                // Hapus event listener lama untuk mencegah duplikasi (jika attachEventListeners dipanggil berulang)
+                // Ini penting agar setiap kali tabel di-render ulang, event listener tidak bertambah ganda
+                speciesTableBody.removeEventListener('click', handleTableButtonClick);
+                // Tambahkan event listener baru
+                speciesTableBody.addEventListener('click', handleTableButtonClick);
+            }
+
+            function handleTableButtonClick(event) {
+                // Mencari elemen terdekat yang memiliki kelas .toggle-status, .delete-btn, atau .view-map-btn
+                const target = event.target.closest('.toggle-status, .delete-btn, .view-map-btn');
+                if (!target) return; // Jika tidak ada elemen yang cocok, keluar
+
+                // Dapatkan indeks dari dataset tombol/span
+                const indexString = target.dataset.index;
+                const index = parseInt(indexString);
+
+                if (isNaN(index)) {
+                    console.error('Invalid index found:', indexString);
+                    return;
+                }
+
+                if (target.classList.contains('delete-btn')) {
+                    actionToConfirm = 'delete';
+                    itemIndexToConfirm = index;
+                    speciesDataForConfirmation = allSpeciesData[itemIndexToConfirm]; // Gunakan allSpeciesData
+
+                    confirmModalTitle.textContent = `Hapus Data No. ${itemIndexToConfirm + 1}?`;
+                    confirmModalMessage.textContent = `Hapus data spesies "${speciesDataForConfirmation.nama_latin || speciesDataForConfirmation.nama_umum || '-'}"?`;
+                    confirmActionButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    confirmActionButton.classList.add('bg-red-600', 'hover:bg-red-700');
+                    confirmModal.style.display = 'flex';
+                } else if (target.classList.contains('toggle-status')) {
+                    actionToConfirm = 'togglePublish';
+                    itemIndexToConfirm = index;
+                    speciesDataForConfirmation = allSpeciesData[itemIndexToConfirm]; // Gunakan allSpeciesData
+
+                    const currentStatus = speciesDataForConfirmation.status_publikasi;
+                    const newStatus = currentStatus === 'Publish' ? 'Unpublish' : 'Publish';
+
+                    confirmModalTitle.textContent = `${newStatus} Data No. ${itemIndexToConfirm + 1}?`;
+                    confirmModalMessage.textContent = `Ubah status publikasi "${speciesDataForConfirmation.nama_latin || speciesDataForConfirmation.nama_umum || '-'}" menjadi ${newStatus}?`;
+                    confirmActionButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+                    confirmActionButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    confirmModal.style.display = 'flex';
+                } else if (target.classList.contains('view-map-btn')) {
+                    showMapInModal(index);
+                }
+            }
+
+            // --- Event Listeners untuk Modal Konfirmasi ---
+            confirmActionButton.onclick = function () {
+                if (itemIndexToConfirm !== null) {
+                    if (actionToConfirm === 'delete') {
+                        deleteSpecies(itemIndexToConfirm);
+                    } else if (actionToConfirm === 'togglePublish') {
+                        togglePublicationStatus(itemIndexToConfirm);
+                    }
+                    confirmModal.style.display = 'none';
+                    actionToConfirm = null;
+                    itemIndexToConfirm = null;
+                    speciesDataForConfirmation = null;
+                }
+            };
+
+            cancelConfirmButton.onclick = function () {
+                confirmModal.style.display = 'none';
+                actionToConfirm = null;
+                itemIndexToConfirm = null;
+                speciesDataForConfirmation = null;
+            };
+
+            // --- Event Listeners untuk Modal Peta ---
+            closeModalButton.onclick = function () {
+                mapModal.style.display = 'none';
+                if (modalMapInstance) {
+                    modalMapInstance.remove(); // Hapus instance peta
+                    modalMapInstance = null;
+                }
+            };
+
+            // Close modal when clicking outside
+            window.onclick = function (event) {
+                if (event.target === mapModal) {
+                    mapModal.style.display = 'none';
+                    if (modalMapInstance) {
+                        modalMapInstance.remove();
+                        modalMapInstance = null;
+                    }
+                } else if (event.target === confirmModal) {
+                    confirmModal.style.display = 'none';
+                    actionToConfirm = null;
+                    itemIndexToConfirm = null;
+                    speciesDataForConfirmation = null;
+                }
+            };
+
+            // --- Pagination Event Listeners ---
+            prevPageButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTableAndPagination();
+                }
+            });
+
+            nextPageButton.addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredSpeciesData.length / rowsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTableAndPagination();
+                }
+            });
+
+            rowsPerPageSelect.addEventListener('change', (event) => {
+                rowsPerPage = parseInt(event.target.value);
+                currentPage = 1; // Reset ke halaman pertama
+                renderTableAndPagination();
+            });
+
+            // --- Search/Filter Event Listener ---
+            searchInput.addEventListener('input', applySearchAndFilter); // Use 'input' for real-time filtering
+
+            // --- Initial Load ---
+            loadSpeciesData(); // Muat data dan render tabel saat DOM siap
+        });
+    </script>
+</body>
+
+</html>

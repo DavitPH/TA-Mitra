@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Data Spesies</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* Set Poppins as the primary font for the entire body */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            /* General background color */
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Styling for the fixed sidebar */
+        .fixed-sidebar {
+            position: fixed;
+            /* Makes the sidebar fixed */
+            left: 0;
+            /* Aligns it to the left edge */
+            top: 0;
+            /* Aligns it to the top edge */
+            bottom: 0;
+            /* Makes it span the full height */
+            z-index: 50;
+            /* Ensures it stays on top of other content */
+        }
+
+        /* Adjust main content margin to prevent overlap with fixed sidebar */
+        .main-content-margin {
+            margin-left: 16rem;
+            /* Adjust this value to match sidebar width (w-64 = 16rem) */
+        }
+
+        /* Styling for the Leaflet map container in detail view */
+        #detailMap {
+            height: 400px;
+            /* Adjust height as needed for detail view */
+            width: 100%;
+            border-radius: 0.5rem;
+            background-color: #f8f8f8;
+        }
+
+
+        /* Responsive adjustments for smaller screens if needed (e.g., sidebar disappears or becomes scrollable) */
+        @media (max-width: 768px) {
+            .fixed-sidebar {
+                position: relative;
+                /* Make sidebar relative on small screens */
+                width: 100%;
+                height: auto;
+                border-radius: 0;
+            }
+
+            .main-content-margin {
+                margin-left: 0;
+                /* Remove margin on small screens */
+            }
+
+            /* Menyesuaikan beberapa layout Tailwind untuk responsivitas yang lebih baik di layar kecil */
+            .flex-col.md\:flex-row {
+                flex-direction: column;
+            }
+
+            .mr-0.md\:mr-4 {
+                margin-right: 0;
+            }
+
+            .mb-4.md\:mb-0 {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+
+    <aside class="w-64 bg-green-700 text-white flex flex-col p-4 rounded-r-lg shadow-lg fixed-sidebar">
+        <div class="flex items-center justify-center mb-10 mt-4">
+            <div class="w-20 h-20 flex items-center justify-center p-2">
+                <img src="logo.png" alt="Snail Logo" class="w-full h-full object-contain">
+            </div>
+        </div>
+        <nav class="flex-grow">
+            <ul>
+                <li class="mb-4">
+                    <a href="daftarSpesies.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-bug text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Invertebrata</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarKomentar.html" class="flex items-center p-3 rounded-lg bg-green-800 shadow-md">
+                        <i class="fas fa-comment-alt text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Komentar</span>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-green-600">
+            <a href="login.html" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                <i class="fas fa-sign-out-alt text-xl mr-3"></i>
+                <span class="font-medium text-lg">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 main-content-margin">
+        <nav class="mb-6 text-gray-600 text-lg">
+            <a href="daftarSpesies.html" class="hover:underline">Daftar Spesies</a>
+            <span class="mx-2 font-bold text-gray-800">&gt;</span>
+            <span class="font-semibold text-gray-800">Detail Data</span>
+        </nav>
+
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Detail Data</h1>
+        </header>
+
+        <section class="bg-white p-8 rounded-xl shadow-md mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Nama Spesies</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label for="nama_umum" class="block text-gray-700 text-sm font-medium mb-2">Nama Umum</label>
+                    <input type="text" id="nama_umum"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+                <div>
+                    <label for="nama_latin" class="block text-gray-700 text-sm font-medium mb-2">Nama Latin</label>
+                    <input type="text" id="nama_latin"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Klasifikasi</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div>
+                    <label for="filum" class="block text-gray-700 text-sm font-medium mb-2">Filum</label>
+                    <input type="text" id="filum"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+                <div>
+                    <label for="kelas" class="block text-gray-700 text-sm font-medium mb-2">Kelas</label>
+                    <input type="text" id="kelas"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+                <div>
+                    <label for="sub_kelas" class="block text-gray-700 text-sm font-medium mb-2">Sub Kelas</label>
+                    <input type="text" id="sub_kelas"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Gambar</h2>
+            <div class="flex flex-col space-y-4 mb-8">
+                <div id="imagePreviewContainer" class="flex flex-wrap gap-4 w-full">
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Deskripsi</h2>
+            <textarea id="deskripsi"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 mb-8 h-32"
+                readonly></textarea>
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Peta Persebaran</h2>
+            <div id="mapListContainer" class="space-y-4 mb-8">
+            </div>
+            <div id="detailMap" class="border border-gray-300 rounded-lg mb-8">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Peran Ekologis</h2>
+                    <input type="text" id="peran_ekologis"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Status Konservasi</h2>
+                    <select id="status_konservasi"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" disabled>
+                        <option value="">Pilih Status Konservasi</option>
+                        <option value="EX">Extinct (EX)</option>
+                        <option value="EW">Extinct in the Wild (EW)</option>
+                        <option value="CR">Critically Endangered (CR)</option>
+                        <option value="EN">Endangered (EN)</option>
+                        <option value="VU">Vulnerable (VU)</option>
+                        <option value="NT">Near Threatened (NT)</option>
+                        <option value="LC">Least Concern (LC)</option>
+                        <option value="DD">Data Deficient (DD)</option>
+                        <option value="NE">Not Evaluated (NE)</option>
+                    </select>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Sumber Data</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label for="nama_peneliti" class="block text-gray-700 text-sm font-medium mb-2">Nama
+                        Peneliti</label>
+                    <input type="text" id="nama_peneliti"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+                <div>
+                    <label for="lokasi_penelitian" class="block text-gray-700 text-sm font-medium mb-2">Lokasi
+                        Penelitian</label>
+                    <input type="text" id="lokasi_penelitian"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+                <div>
+                    <label for="metode_penelitian" class="block text-gray-700 text-sm font-medium mb-2">Metode
+                        Penelitian</label>
+                    <input type="text" id="metode_penelitian"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+                <div>
+                    <label for="tanggal_penelitian" class="block text-gray-700 text-sm font-medium mb-2">Tanggal
+                        Penelitian</label>
+                    <input type="date" id="tanggal_penelitian"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button
+                    class="px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors"
+                    onclick="window.history.back()">
+                    Kembali
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Dapatkan elemen-elemen untuk mengisi data
+            const namaUmumInput = document.getElementById('nama_umum');
+            const namaLatinInput = document.getElementById('nama_latin');
+            const filumInput = document.getElementById('filum'); // Tambahan
+            const kelasInput = document.getElementById('kelas'); // Tambahan
+            const subKelasInput = document.getElementById('sub_kelas'); // Tambahan
+            const deskripsiTextarea = document.getElementById('deskripsi');
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            const peranEkologisInput = document.getElementById('peran_ekologis');
+            const statusKonservasiSelect = document.getElementById('status_konservasi');
+            const namaPenelitiInput = document.getElementById('nama_peneliti');
+            const lokasiPenelitianInput = document.getElementById('lokasi_penelitian');
+            const metodePenelitianInput = document.getElementById('metode_penelitian');
+            const tanggalPenelitianInput = document.getElementById('tanggal_penelitian');
+            const mapListContainer = document.getElementById('mapListContainer');
+
+            // Inisialisasi peta detail
+            const detailMap = L.map('detailMap').setView([3.4333, 117.6500], 8);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(detailMap);
+
+            const loadedMapLayers = L.featureGroup().addTo(detailMap);
+
+            // Dapatkan indeks spesies dari URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const speciesIndex = parseInt(urlParams.get('index'));
+
+            if (isNaN(speciesIndex)) {
+                console.error('Indeks spesies tidak valid di URL.');
+                // Opsional: tampilkan pesan error atau redirect ke daftar spesies
+                window.location.href = 'daftarSpesies.html';
+                return;
+            }
+
+            // Muat semua record spesies dari sessionStorage
+            const allSpeciesRecordsString = sessionStorage.getItem('allSpeciesRecords');
+            if (!allSpeciesRecordsString) {
+                console.error('Tidak ada data spesies di sessionStorage.');
+                // Opsional: tampilkan pesan error atau redirect ke daftar spesies
+                window.location.href = 'daftarSpesies.html';
+                return;
+            }
+
+            try {
+                const allSpeciesRecords = JSON.parse(allSpeciesRecordsString);
+                const speciesData = allSpeciesRecords[speciesIndex];
+
+                if (!speciesData) {
+                    console.error(`Spesies dengan indeks ${speciesIndex} tidak ditemukan.`);
+                    // Opsional: tampilkan pesan error atau redirect ke daftar spesies
+                    window.location.href = 'daftarSpesies.html';
+                    return;
+                }
+
+                // Isi elemen HTML dengan data spesies
+                namaUmumInput.value = speciesData.nama_umum || 'N/A';
+                namaLatinInput.value = speciesData.nama_latin || 'N/A';
+                filumInput.value = speciesData.filum || 'N/A'; // Isi klasifikasi
+                kelasInput.value = speciesData.kelas || 'N/A'; // Isi klasifikasi
+                subKelasInput.value = speciesData.sub_kelas || 'N/A'; // Isi klasifikasi
+                deskripsiTextarea.value = speciesData.deskripsi || 'Tidak ada deskripsi.';
+                peranEkologisInput.value = speciesData.peran_ekologis || 'N/A';
+                statusKonservasiSelect.value = speciesData.status_konservasi || '';
+                namaPenelitiInput.value = speciesData.nama_peneliti || 'N/A';
+                lokasiPenelitianInput.value = speciesData.lokasi_penelitian || 'N/A';
+                metodePenelitianInput.value = speciesData.metode_penelitian || 'N/A';
+                tanggalPenelitianInput.value = speciesData.tanggal_penelitian || 'N/A';
+
+
+                // Tampilkan gambar (jika ada data gambar)
+                if (speciesData.gambar && speciesData.gambar.length > 0) { // Menggunakan speciesData.gambar
+                    imagePreviewContainer.innerHTML = ''; // Bersihkan kontainer terlebih dahulu
+                    speciesData.gambar.forEach((imgSrc, imgIndex) => {
+                        const itemWrapper = document.createElement('div');
+                        itemWrapper.className = 'flex flex-col items-center space-y-2';
+
+                        const thumbnailDiv = document.createElement('div');
+                        thumbnailDiv.className = 'relative w-32 h-32 border border-gray-300 rounded-lg flex-shrink-0 overflow-hidden';
+
+                        const img = document.createElement('img');
+                        img.src = imgSrc;
+                        img.alt = `Gambar Spesies ${imgIndex + 1}`;
+                        img.className = 'w-full h-full object-cover';
+
+                        const fileNameSpan = document.createElement('span');
+                        fileNameSpan.className = 'text-gray-700 text-sm truncate w-32 text-center';
+                        fileNameSpan.textContent = `Gambar ${imgIndex + 1}`; // Ganti dengan nama file jika disimpan
+
+                        thumbnailDiv.appendChild(img);
+                        itemWrapper.appendChild(thumbnailDiv);
+                        itemWrapper.appendChild(fileNameSpan);
+                        imagePreviewContainer.appendChild(itemWrapper);
+                    });
+                } else {
+                    imagePreviewContainer.innerHTML = '<p class="text-gray-500">Tidak ada gambar yang tersedia.</p>';
+                }
+
+
+                // Render peta persebaran
+                const mapCollections = speciesData.peta_persebaran || [];
+
+                function renderMapsForDetailView(mapsToDisplay) {
+                    loadedMapLayers.clearLayers(); // Hapus layer yang ada
+                    let bounds = new L.LatLngBounds([]);
+
+                    // mapsToDisplay di sini diasumsikan sebagai array dari objek GeoJSON tunggal atau FeatureCollection.
+                    // Jika mapCollection itu sendiri adalah array fitur, L.geoJSON akan menanganinya.
+                    mapsToDisplay.forEach(mapCollection => {
+                        if (mapCollection && Object.keys(mapCollection).length > 0) { // Pastikan bukan objek kosong
+                            const layer = L.geoJSON(mapCollection, {
+                                style: {
+                                    color: '#007bff',
+                                    weight: 3,
+                                    fillColor: '#007bff',
+                                    fillOpacity: 0.2
+                                }
+                            }).addTo(loadedMapLayers);
+                            if (layer.getBounds().isValid()) {
+                                bounds.extend(layer.getBounds());
+                            }
+                        }
+                    });
+
+                    if (bounds.isValid()) {
+                        detailMap.fitBounds(bounds);
+                    } else {
+                        detailMap.setView([3.4333, 117.6500], 8);
+                    }
+                    detailMap.invalidateSize(); // Penting jika peta berada dalam tab tersembunyi
+                }
+
+                // Tampilkan daftar peta dan tombol "Lihat Semua Peta"
+                mapListContainer.innerHTML = ''; // Bersihkan kontainer daftar peta
+
+                if (mapCollections.length === 0) {
+                    mapListContainer.innerHTML = '<p class="text-gray-500">Tidak ada peta persebaran yang tersedia.</p>';
+                } else {
+                    if (mapCollections.length > 1) { // Tampilkan "Lihat Semua" jika ada lebih dari 1 peta
+                        const viewAllItem = document.createElement('div');
+                        viewAllItem.className = 'flex items-center justify-between bg-green-100 text-green-800 p-4 rounded-lg border border-green-200 cursor-pointer hover:bg-green-200 transition-colors mb-2';
+                        viewAllItem.innerHTML = `
+                            <span class="font-semibold"><i class="fas fa-globe mr-2"></i>Lihat Semua Peta</span>
+                            <div></div>
+                        `;
+                        mapListContainer.appendChild(viewAllItem);
+                        viewAllItem.addEventListener('click', () => renderMapsForDetailView(mapCollections));
+                    }
+
+                    // Tampilkan setiap peta individu di daftar
+                    mapCollections.forEach((mapCollection, index) => {
+                        const mapItem = document.createElement('div');
+                        mapItem.className = 'flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors mb-2';
+                        mapItem.innerHTML = `
+                            <span class="text-gray-800">Peta ${index + 1}</span>
+                            <div class="flex items-center space-x-3">
+                                <button class="text-gray-500 hover:text-gray-700 transition-colors view-single-map-btn" data-index="${index}" title="Lihat Peta"><i class="fas fa-eye"></i></button>
+                            </div>
+                        `;
+                        mapListContainer.appendChild(mapItem);
+
+                        const viewSingleMapButton = mapItem.querySelector('.view-single-map-btn');
+                        if (viewSingleMapButton) {
+                            viewSingleMapButton.addEventListener('click', function () {
+                                const selectedMapIndex = parseInt(this.dataset.index);
+                                // Pastikan mapCollections[selectedMapIndex] adalah objek GeoJSON tunggal atau FeatureCollection
+                                renderMapsForDetailView([mapCollections[selectedMapIndex]]); // Hanya tampilkan yang dipilih dalam array
+                            });
+                        }
+                    });
+                }
+
+                // Set default tampilan peta ke peta pertama atau semua jika ada
+                if (mapCollections.length > 0) {
+                    renderMapsForDetailView(mapCollections); // Tampilkan semua peta secara default
+                }
+
+
+                // Tangani perubahan ukuran peta
+                window.addEventListener('resize', function () {
+                    detailMap.invalidateSize();
+                });
+
+            } catch (e) {
+                console.error('Error saat memuat data spesies:', e);
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Peta Interaktif Admin</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* Map Container Styling */
+        #map {
+            width: 100%;
+            height: calc(100% - 4rem);
+            /* Adjust height to fit buttons below */
+            border-radius: 0.75rem;
+            /* rounded-xl */
+        }
+
+        /* Leaflet Draw Toolbar Adjustments */
+        .leaflet-draw-toolbar a {
+            font-size: 1.25rem;
+        }
+
+        .leaflet-touch .leaflet-draw-toolbar .leaflet-draw-actions a {
+            font-size: 1rem;
+        }
+
+        /* Ensure Leaflet controls are on top */
+        .leaflet-control-container {
+            z-index: 1000;
+        }
+
+        /* Custom Orange for buttons */
+        .bg-orange-custom {
+            background-color: #F97A00;
+        }
+
+        .hover\:bg-orange-darker-custom:hover {
+            background-color: #E06C00;
+        }
+
+        /* Fixed Sidebar Styling */
+        .fixed-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 50;
+        }
+
+        /* Main Content Area Adjustment for Fixed Sidebar */
+        .main-content-area {
+            margin-left: 16rem;
+            /* Matches w-64 of sidebar */
+            flex-grow: 1;
+            overflow-y: auto;
+            min-height: 100vh;
+        }
+
+        /* Notification styling */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            display: none;
+            /* Hidden by default */
+        }
+
+        /* Responsive Adjustments for Mobile */
+        @media (max-width: 768px) {
+            .fixed-sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                /* Make sidebar flow naturally on small screens */
+                border-radius: 0;
+                padding: 1rem;
+            }
+
+            .main-content-area {
+                margin-left: 0;
+                /* Remove margin on small screens */
+                padding: 1rem;
+                width: 100%;
+            }
+
+            .flex-col-mobile {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex flex-col md:flex-row bg-gray-100 min-h-screen">
+    <aside class="w-64 bg-green-700 text-white flex flex-col p-4 rounded-r-lg shadow-lg fixed-sidebar">
+        <div class="flex items-center justify-center mb-10 mt-4">
+            <div class="w-20 h-20 flex items-center justify-center p-2">
+                <img src="https://placehold.co/80x80/6B9080/FFFFFF?text=LOGO" alt="Logo"
+                    class="w-full h-full object-contain rounded-full border-2 border-white" />
+            </div>
+        </div>
+        <nav class="flex-grow">
+            <ul>
+                <li class="mb-4">
+                    <a href="daftarSpesies.html" class="flex items-center p-3 rounded-lg bg-green-800 shadow-md">
+                        <i class="fas fa-bug text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Invertebrata</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarKomentar.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-comment-alt text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Komentar</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-green-600">
+            <a href="login.html" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                <i class="fas fa-sign-out-alt text-xl mr-3"></i>
+                <span class="font-medium text-lg">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-content-area flex flex-col p-4">
+        <div class="w-full mb-4">
+            <nav class="text-gray-600 text-sm" aria-label="breadcrumb">
+                <ol class="list-none p-0 inline-flex">
+                    <li class="flex items-center">
+                        <a href="daftarSpesies.html" class="hover:text-gray-800 transition-colors">Daftar Spesies</a>
+                        <span class="mx-2 text-gray-400">></span>
+                    </li>
+                    <li class="flex items-center">
+                        <a href="tambahSpesies.html" class="hover:text-gray-800 transition-colors"
+                            id="linkToParentForm">Tambah Data</a>
+                        <span class="mx-2 text-gray-400">></span>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-gray-800 font-medium" id="pageTitleBreadcrumb">Tambah Peta</span>
+                    </li>
+                </ol>
+            </nav>
+            <h1 class="text-4xl font-bold text-gray-800 mt-4" id="pageTitleHeader">Tambah Peta</h1>
+        </div>
+
+        <div id="notification" class="notification text-white font-semibold" style="display:none;"></div>
+
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 w-full h-[80vh] flex flex-col self-start">
+            <div id="map" class="flex-grow"></div>
+            <div class="w-full flex justify-end space-x-4 flex-col-mobile md:flex-row mt-4">
+                <button id="cancelButton"
+                    class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-6 border border-gray-300 rounded-lg shadow-sm transition-colors duration-200 mb-2 md:mb-0">
+                    Batal
+                </button>
+                <button id="saveRegionButton"
+                    class="bg-orange-custom hover:bg-orange-darker-custom text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors duration-200">
+                    Simpan Wilayah
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Inisialisasi peta Leaflet
+            const map = L.map('map').setView([3.4333, 117.6500], 9); // Koordinat fokus ke Kalimantan Utara
+
+            // Tambahkan Tile Layer OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            // Buat FeatureGroup untuk semua wilayah GeoJSON yang dimuat (background regions)
+            const allRegions = L.featureGroup().addTo(map);
+
+            // Daftar file GeoJSON yang akan dimuat (misalnya batas administrasi)
+            const geojsonFiles = [
+                'data/geojson/65.01_Bulungan.geojson',
+                'data/geojson/65.02_Malinau.geojson',
+                'data/geojson/65.03_Nunukan.geojson',
+                'data/geojson/65.04_Tana_Tidung.geojson',
+                'data/geojson/65.71_Kota_Tarakan.geojson'
+            ];
+
+            // Muat dan tambahkan setiap file GeoJSON ke peta
+            geojsonFiles.forEach(file => {
+                fetch(file)
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        const layer = L.geoJSON(data, {
+                            style: {
+                                color: '#28a745', // Warna garis hijau
+                                weight: 2, // Ketebalan garis
+                                fillColor: '#7CFC00', // Warna isi hijau muda
+                                fillOpacity: 0.3
+                            }
+                        }).addTo(allRegions); // Tambahkan ke feature group
+                    })
+                    .catch(error => console.error(`Error loading GeoJSON file ${file}:`, error));
+            });
+
+            // Sesuaikan tampilan peta agar mencakup semua wilayah yang dimuat setelah 1 detik
+            setTimeout(() => {
+                if (allRegions.getLayers().length > 0) {
+                    map.fitBounds(allRegions.getBounds());
+                }
+            }, 1000);
+
+            // Buat FeatureGroup untuk menyimpan lapisan yang digambar oleh pengguna
+            const drawnItems = new L.FeatureGroup();
+            map.addLayer(drawnItems);
+
+            // Konfigurasi kontrol gambar Leaflet.draw
+            const drawControl = new L.Control.Draw({
+                edit: { featureGroup: drawnItems, remove: true }, // Izinkan pengeditan dan penghapusan lapisan
+                draw: {
+                    polygon: {
+                        allowIntersection: false,
+                        drawError: { color: '#e1e100', message: 'Poligon tidak boleh menyilang!' },
+                        shapeOptions: { color: '#007bff' }
+                    },
+                    polyline: true,
+                    rectangle: true,
+                    circle: false,
+                    marker: true,
+                    circlemarker: false
+                }
+            });
+            map.addControl(drawControl);
+
+            // Variabel untuk menyimpan indeks peta yang sedang diedit (jika ada) dari tambahsSpesies.html atau editSpesies.html
+            let parentPageIndex = null; // Ini akan menjadi 'editIndex' jika dari editSpesies.html
+            let mapIndexToEdit = null;
+            let initialMapData = []; // Untuk menyimpan data peta saat ini di tambahsSpesies.html (jika menambah spesies baru)
+
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // Periksa apakah sedang dalam mode edit peta dari halaman Tambah/Edit Spesies
+            if (urlParams.has('editMapFromSpeciesIndex')) {
+                parentPageIndex = parseInt(urlParams.get('editMapFromSpeciesIndex'));
+                document.getElementById('linkToParentForm').href = `editSpesies.html?editIndex=${parentPageIndex}`;
+                document.getElementById('linkToParentForm').textContent = 'Edit Data';
+            }
+
+            if (urlParams.has('mapIndexToEdit')) {
+                mapIndexToEdit = parseInt(urlParams.get('mapIndexToEdit'));
+                document.getElementById('pageTitleHeader').innerText = 'Edit Peta Spesies';
+                document.getElementById('pageTitleBreadcrumb').innerText = 'Edit Peta';
+                document.getElementById('saveRegionButton').innerText = 'Perbarui Peta';
+            } else if (urlParams.has('editSingleMap')) { // Ini digunakan jika edit dari tambahSpesies.html (untuk spesies baru)
+                mapIndexToEdit = parseInt(urlParams.get('editSingleMap'));
+                document.getElementById('pageTitleHeader').innerText = 'Edit Peta';
+                document.getElementById('pageTitleBreadcrumb').innerText = 'Edit Peta';
+                document.getElementById('saveRegionButton').innerText = 'Perbarui Peta';
+            }
+
+            // --- Logika Pemuatan Peta Awal ke Drawn Items ---
+            const savedMapsInSession = sessionStorage.getItem('allSavedMaps');
+            if (savedMapsInSession) {
+                try {
+                    const parsedMaps = JSON.parse(savedMapsInSession);
+                    if (parsedMaps && Array.isArray(parsedMaps)) {
+                        // Hanya gunakan initialMapData jika kita sedang dalam mode "tambah spesies baru" atau "mengedit peta yang sudah ada"
+                        // Jika kita datang dari editSpesies.html untuk MENAMBAH peta baru, initialMapData tidak relevan untuk drawnItems
+                        // kecuali untuk konteks awal yang akan dimodifikasi.
+
+                        if (mapIndexToEdit !== null) { // Mode EDIT peta (baik dari editSpesies.html atau tambahsSpesies.html)
+                            initialMapData = parsedMaps; // Data dasar untuk operasi edit
+                            if (initialMapData[mapIndexToEdit]) {
+                                drawnItems.clearLayers();
+                                L.geoJSON(initialMapData[mapIndexToEdit], {
+                                    style: {
+                                        color: '#007bff',
+                                        weight: 3,
+                                        fillColor: '#007bff',
+                                        fillOpacity: 0.2
+                                    }
+                                }).addTo(drawnItems);
+                                console.log('GeoJSON yang dimuat untuk diedit dari allSavedMaps:', initialMapData[mapIndexToEdit]);
+                            }
+                        } else if (parentPageIndex === null) { // Mode TAMBAH PETA BARU untuk spesies BARU (dari tambahsSpesies.html)
+                            // Jika tidak ada mapIndexToEdit dan tidak ada parentPageIndex,
+                            // berarti kita sedang di tambahSpesies.html dan mengklik "Tambah Peta".
+                            // initialMapData akan berisi koleksi peta yang sudah ada untuk spesies baru ini.
+                            // Namun, `drawnItems` harus KOSONG agar pengguna bisa menggambar peta baru tanpa duplikasi visual.
+                            initialMapData = parsedMaps; // tetap simpan untuk disatukan saat save
+                            drawnItems.clearLayers(); // Pastikan bersih untuk gambar baru
+                            console.log('Mode Tambah Peta Baru untuk spesies baru: initialMapData dimuat sebagai basis, drawnItems bersih.');
+                        } else if (parentPageIndex !== null && mapIndexToEdit === null) {
+                            // Ini adalah kasus ketika datang dari editSpesies.html untuk MENAMBAH peta baru.
+                            // `allSavedMaps` akan berisi array `peta_persebaran` dari spesies yang diedit.
+                            // Kita TIDAK ingin merender ini ke `drawnItems` karena kita akan menggambar yang baru.
+                            // Kita hanya akan mengambil data ini (peta yang sudah ada) sebagai `initialMapData`
+                            // untuk digabungkan dengan peta baru yang akan digambar.
+                            initialMapData = parsedMaps; // Simpan sebagai basis data yang ada
+                            drawnItems.clearLayers(); // Sangat penting: kosongkan untuk gambar baru
+                            console.log('Mode Tambah Peta Baru untuk spesies yang sudah ada: allSavedMaps dimuat sebagai basis, drawnItems bersih.');
+                        }
+
+                        // Sesuaikan tampilan peta setelah memuat lapisan jika ada
+                        setTimeout(() => {
+                            if (drawnItems.getLayers().length > 0) {
+                                map.fitBounds(drawnItems.getBounds());
+                            } else if (allRegions.getLayers().length > 0) {
+                                map.fitBounds(allRegions.getBounds());
+                            }
+                        }, 500);
+                    }
+                } catch (e) {
+                    console.error('Error parsing allSavedMaps from sessionStorage on load:', e);
+                    sessionStorage.removeItem('allSavedMaps');
+                }
+            }
+
+
+            // Event listener saat bentuk baru digambar
+            map.on(L.Draw.Event.CREATED, function (event) {
+                const layer = event.layer;
+                // Jika dalam mode edit, pastikan hanya ada satu layer yang digambar
+                if (mapIndexToEdit !== null) {
+                    drawnItems.clearLayers(); // Hapus semua yang sudah ada di drawnItems untuk edit peta tunggal
+                }
+                drawnItems.addLayer(layer);
+                const geojson = layer.toGeoJSON();
+                console.log('GeoJSON Wilayah yang Digambar:', geojson);
+            });
+
+            // Event listener saat lapisan dihapus
+            map.on(L.Draw.Event.DELETED, e => {
+                e.layers.eachLayer(layer => {
+                    const geojson = layer.toGeoJSON();
+                    console.log('Dihapus (GeoJSON):', geojson);
+                });
+            });
+
+            // Event listener saat lapisan diedit
+            map.on(L.Draw.Event.EDITED, e => {
+                e.layers.eachLayer(layer => {
+                    const geojson = layer.toGeoJSON();
+                    console.log('Diedit (GeoJSON):', geojson);
+                });
+            });
+
+            // Mendapatkan referensi tombol Batal dan Simpan/Perbarui Wilayah
+            const cancelButton = document.getElementById('cancelButton');
+            const saveRegionButton = document.getElementById('saveRegionButton');
+
+            // Event listener untuk tombol Batal
+            cancelButton.addEventListener('click', function () {
+                sessionStorage.removeItem('notificationMessage');
+                sessionStorage.removeItem('notificationType');
+                sessionStorage.removeItem('allSavedMaps'); // Hapus data allSavedMaps agar tidak duplikat di sesi berikutnya
+
+                if (parentPageIndex !== null) {
+                    window.location.href = `editSpesies.html?editIndex=${parentPageIndex}`;
+                } else {
+                    window.location.href = 'tambahSpesies.html';
+                }
+            });
+
+            // Event listener untuk tombol Simpan/Perbarui Wilayah
+            saveRegionButton.addEventListener('click', function () {
+                const currentDrawnGeoJSON = [];
+                drawnItems.eachLayer(function (layer) {
+                    currentDrawnGeoJSON.push(layer.toGeoJSON());
+                });
+
+                console.log('GeoJSON yang digambar/diedit:', currentDrawnGeoJSON);
+
+                if (currentDrawnGeoJSON.length === 0 && mapIndexToEdit === null) {
+                    // Jika tidak ada yang digambar dan ini bukan mode edit (tapi tambah baru)
+                    sessionStorage.setItem('notificationMessage', 'Silakan gambar setidaknya satu wilayah di peta.');
+                    sessionStorage.setItem('notificationType', 'error');
+
+                    if (parentPageIndex !== null) {
+                        window.location.href = `editSpesies.html?editIndex=${parentPageIndex}`;
+                    } else {
+                        window.location.href = 'tambahSpesies.html';
+                    }
+                    return;
+                }
+
+                try {
+                    if (parentPageIndex !== null) {
+                        // Skenario 1: Dari editSpesies.html (edit spesies yang sudah ada)
+                        const allSpeciesRecordsString = sessionStorage.getItem('allSpeciesRecords');
+                        let allSpeciesRecords = allSpeciesRecordsString ? JSON.parse(allSpeciesRecordsString) : [];
+
+                        if (allSpeciesRecords[parentPageIndex]) {
+                            if (!allSpeciesRecords[parentPageIndex].peta_persebaran) {
+                                allSpeciesRecords[parentPageIndex].peta_persebaran = [];
+                            }
+
+                            if (mapIndexToEdit !== null) {
+                                // KASUS A: Mengedit peta yang SUDAH ADA untuk spesies tertentu
+                                if (currentDrawnGeoJSON.length > 0) {
+                                    allSpeciesRecords[parentPageIndex].peta_persebaran[mapIndexToEdit] = currentDrawnGeoJSON[0];
+                                    sessionStorage.setItem('notificationMessage', 'Peta berhasil diperbarui!');
+                                    sessionStorage.setItem('notificationType', 'success');
+                                } else {
+                                    // Jika tidak ada yang digambar, berarti dihapus
+                                    allSpeciesRecords[parentPageIndex].peta_persebaran.splice(mapIndexToEdit, 1);
+                                    sessionStorage.setItem('notificationMessage', 'Peta berhasil dihapus!');
+                                    sessionStorage.setItem('notificationType', 'success');
+                                }
+                            } else {
+                                // KASUS B: Menambahkan peta BARU ke spesies yang SUDAH ADA
+                                // allSavedMaps (yang diinitialisasi dengan peta_persebaran spesies ini)
+                                // akan berisi semua peta yang sudah ada PLUS yang baru digambar
+                                // Kita cukup mengambil semua yang ada di `drawnItems` (yang seharusnya hanya yang baru digambar)
+                                // dan menambahkannya ke array yang sudah ada di allSpeciesRecords.
+                                if (currentDrawnGeoJSON.length > 0) {
+                                    // Cek apakah peta yang sama sudah ada di existingMaps (berdasarkan GeoJSON stringified)
+                                    const newGeoJSONString = JSON.stringify(currentDrawnGeoJSON[0]);
+                                    const isDuplicate = initialMapData.some(map => JSON.stringify(map) === newGeoJSONString); // Cek duplikasi terhadap initialMapData (peta spesies yang sudah ada)
+
+                                    if (!isDuplicate) {
+                                        allSpeciesRecords[parentPageIndex].peta_persebaran.push(currentDrawnGeoJSON[0]);
+                                        sessionStorage.setItem('notificationMessage', 'Peta baru berhasil ditambahkan!');
+                                        sessionStorage.setItem('notificationType', 'success');
+                                        console.log('Peta baru ditambahkan ke spesies yang sudah ada.');
+                                    } else {
+                                        sessionStorage.setItem('notificationMessage', 'Peta ini sudah ada dalam daftar.');
+                                        sessionStorage.setItem('notificationType', 'info');
+                                        console.log('Peta baru dideteksi sebagai duplikat dan tidak ditambahkan.');
+                                    }
+                                } else {
+                                    sessionStorage.setItem('notificationMessage', 'Tidak ada peta yang digambar untuk ditambahkan.');
+                                    sessionStorage.setItem('notificationType', 'error');
+                                }
+                            }
+                            sessionStorage.setItem('allSpeciesRecords', JSON.stringify(allSpeciesRecords));
+                            console.log(`Peta untuk spesies ${parentPageIndex} berhasil diperbarui di allSpeciesRecords.`);
+                        } else {
+                            console.error(`Spesies dengan indeks ${parentPageIndex} tidak ditemukan untuk pembaruan peta.`);
+                            sessionStorage.setItem('notificationMessage', 'Gagal memperbarui peta: Spesies tidak ditemukan.');
+                            sessionStorage.setItem('notificationType', 'error');
+                        }
+                        sessionStorage.removeItem('allSavedMaps'); // Hapus data sementara setelah disimpan ke record utama
+                        window.location.href = `editSpesies.html?editIndex=${parentPageIndex}`;
+
+                    } else {
+                        // Skenario 2: Dari tambahsSpesies.html (tambah spesies baru)
+                        let existingMaps = initialMapData; // Array ini menyimpan peta untuk entri spesies BARU yang sedang dikerjakan
+
+                        if (mapIndexToEdit !== null) {
+                            // KASUS C: Mengedit peta sementara yang SUDAH ADA di 'allSavedMaps'
+                            if (currentDrawnGeoJSON.length > 0) {
+                                existingMaps[mapIndexToEdit] = currentDrawnGeoJSON[0];
+                                sessionStorage.setItem('notificationMessage', 'Peta berhasil diperbarui!');
+                                sessionStorage.setItem('notificationType', 'success');
+                            } else {
+                                existingMaps.splice(mapIndexToEdit, 1);
+                                sessionStorage.setItem('notificationMessage', 'Peta berhasil dihapus!');
+                                sessionStorage.setItem('notificationType', 'success');
+                            }
+                        } else {
+                            // KASUS D: Menambahkan peta sementara BARU ke 'allSavedMaps' (untuk spesies baru)
+                            if (currentDrawnGeoJSON.length > 0) {
+                                const newGeoJSONString = JSON.stringify(currentDrawnGeoJSON[0]);
+                                const isDuplicate = existingMaps.some(map => JSON.stringify(map) === newGeoJSONString);
+
+                                if (!isDuplicate) {
+                                    existingMaps.push(currentDrawnGeoJSON[0]);
+                                    sessionStorage.setItem('notificationMessage', 'Peta baru berhasil ditambahkan!');
+                                    sessionStorage.setItem('notificationType', 'success');
+                                    console.log('Peta baru ditambahkan ke allSavedMaps (untuk spesies baru).');
+                                } else {
+                                    sessionStorage.setItem('notificationMessage', 'Peta ini sudah ada dalam daftar.');
+                                    sessionStorage.setItem('notificationType', 'info');
+                                    console.log('Peta baru dideteksi sebagai duplikat dan tidak ditambahkan.');
+                                }
+                            } else {
+                                sessionStorage.setItem('notificationMessage', 'Tidak ada peta yang digambar untuk ditambahkan.');
+                                sessionStorage.setItem('notificationType', 'error');
+                            }
+                        }
+                        sessionStorage.setItem('allSavedMaps', JSON.stringify(existingMaps));
+                        window.location.href = 'tambahSpesies.html';
+                    }
+                } catch (e) {
+                    console.error('Gagal menyimpan/memperbarui data peta ke sessionStorage:', e);
+                    sessionStorage.setItem('notificationMessage', 'Gagal menyimpan peta. Data mungkin terlalu besar atau ada masalah lainnya.');
+                    sessionStorage.setItem('notificationType', 'error');
+
+                    if (parentPageIndex !== null) {
+                        window.location.href = `editSpesies.html?editIndex=${parentPageIndex}`;
+                    } else {
+                        window.location.href = 'tambahSpesies.html';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
