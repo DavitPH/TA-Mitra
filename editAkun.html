@@ -152,6 +152,19 @@
             <h2 class="text-xl font-semibold text-gray-800 mb-6">Ganti Kata Sandi</h2>
             <form id="changePasswordForm">
                 <div class="mb-6">
+                    <label for="old_password" class="block text-gray-700 text-sm font-medium mb-2">Kata Sandi
+                        Lama</label>
+                    <div class="relative">
+                        <input type="password" id="old_password"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all pr-10"
+                            placeholder="••••••••" required minlength="8">
+                        <button type="button" id="toggleOldPassword"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <p id="oldPasswordError" class="text-red-500 text-sm mt-1 hidden"></p>
+                    
                     <label for="new_password" class="block text-gray-700 text-sm font-medium mb-2">Kata Sandi
                         Baru</label>
                     <div class="relative">
@@ -185,11 +198,13 @@
             const emailInput = document.getElementById('email');
             const peranInput = document.getElementById('peran');
             const newPasswordInput = document.getElementById('new_password');
-            const toggleNewPasswordButton = document.getElementById('toggleNewPassword');
+            const oldPasswordInput = document.getElementById('old_password'); // New element
             const newPasswordError = document.getElementById('newPasswordError');
+            const oldPasswordError = document.getElementById('oldPasswordError'); // New element
+            const toggleNewPasswordButton = document.getElementById('toggleNewPassword');
+            const toggleOldPasswordButton = document.getElementById('toggleOldPassword'); // New element
             const changePasswordForm = document.getElementById('changePasswordForm');
             const cancelButton = document.getElementById('cancelButton');
-            // Notification div is still here, but its direct use for success will be limited on this page.
             const notificationDiv = document.getElementById('notification');
 
             let allAccountsData = JSON.parse(localStorage.getItem('allAccountsData')) || [];
@@ -197,7 +212,6 @@
             let accountIdToEdit = null;
             let currentAccountData = null;
 
-            // This showNotification is mainly for error/info messages on this page, not for the success redirect.
             function showNotification(message, type = 'success') {
                 notificationDiv.textContent = message;
                 notificationDiv.className = 'notification text-white font-semibold'; // Reset classes
@@ -226,26 +240,47 @@
                     emailInput.value = currentAccountData.email;
                     peranInput.value = currentAccountData.peran;
                 } else {
-                    // This error will still show on this page before redirecting
                     showNotification('Akun tidak ditemukan.', 'error');
-                    setTimeout(() => { // Add a small delay for the user to see the error
+                    setTimeout(() => {
                         window.location.href = 'daftarAkun.html';
                     }, 500);
                 }
             } else {
                 showNotification('ID Akun tidak ditemukan di URL.', 'error');
-                setTimeout(() => { // Add a small delay for the user to see the error
+                setTimeout(() => {
                     window.location.href = 'daftarAkun.html';
                 }, 500);
             }
 
             // Password visibility toggles
+            toggleOldPasswordButton.addEventListener('click', function () {
+                const type = oldPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                oldPasswordInput.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+
             toggleNewPasswordButton.addEventListener('click', function () {
                 const type = newPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 newPasswordInput.setAttribute('type', type);
                 this.querySelector('i').classList.toggle('fa-eye');
                 this.querySelector('i').classList.toggle('fa-eye-slash');
             });
+
+            // Validation function for old password
+            function validateOldPassword() {
+                const password = oldPasswordInput.value.trim();
+                oldPasswordError.classList.add('hidden');
+                oldPasswordInput.classList.remove('border-red-500');
+
+                if (password.length < 8) {
+                    oldPasswordError.textContent = 'Kata sandi minimal 8 karakter.';
+                    oldPasswordError.classList.remove('hidden');
+                    oldPasswordInput.classList.add('border-red-500');
+                    return false;
+                }
+                return true;
+            }
 
             // Validation function for new password
             function validateNewPassword() {
@@ -264,16 +299,36 @@
 
             // Live validation on input change
             newPasswordInput.addEventListener('input', validateNewPassword);
+            oldPasswordInput.addEventListener('input', validateOldPassword);
+
 
             // Form submission handler
             changePasswordForm.addEventListener('submit', function (event) {
                 event.preventDefault();
 
-                const isNewPasswordValid = validateNewPassword();
+                const oldPassword = oldPasswordInput.value.trim();
+                const newPassword = newPasswordInput.value.trim();
 
-                if (isNewPasswordValid) {
+                let isValid = true;
+
+                // Validate Old Password
+                if (!validateOldPassword()) {
+                    isValid = false;
+                } else if (currentAccountData.password !== oldPassword) {
+                    oldPasswordError.textContent = 'Kata sandi lama tidak cocok.';
+                    oldPasswordError.classList.remove('hidden');
+                    oldPasswordInput.classList.add('border-red-500');
+                    isValid = false;
+                }
+
+                // Validate New Password
+                if (!validateNewPassword()) {
+                    isValid = false;
+                }
+
+                if (isValid) {
                     if (currentAccountData) {
-                        currentAccountData.password = newPasswordInput.value.trim();
+                        currentAccountData.password = newPassword; // Update with the new password
 
                         const index = allAccountsData.findIndex(account => account.id === accountIdToEdit);
                         if (index !== -1) {
@@ -282,7 +337,7 @@
 
                             console.log(`Password for ${currentAccountData.email} updated and saved to localStorage.`);
 
-                            // *** SINKRONISASI NOTIFIKASI: Simpan pesan ke sessionStorage sebelum redirect ***
+                            // SINKRONISASI NOTIFIKASI: Simpan pesan ke sessionStorage sebelum redirect
                             sessionStorage.setItem('notificationMessage', 'Kata sandi berhasil diperbarui!');
                             sessionStorage.setItem('notificationType', 'success');
 
@@ -301,7 +356,6 @@
 
             // Cancel button functionality
             cancelButton.addEventListener('click', function () {
-                // No notification on cancel, just redirect
                 window.location.href = 'daftarAkun.html';
             });
         });
