@@ -294,7 +294,18 @@
             const confirmModalMessage = document.getElementById('confirmModalMessage');
             let accountIdToDelete = null; // Menyimpan ID akun yang akan dihapus
 
-            function initializeData() {
+            // Fungsi helper untuk menghash kata sandi (HARUS SAMA DENGAN di editAkun.html)
+            async function hashPassword(password) {
+                const textEncoder = new TextEncoder();
+                const data = textEncoder.encode(password);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                return hashedPassword;
+            }
+
+            // Function to initialize dummy data in localStorage if not present
+            async function initializeData() { // Pastikan fungsi ini async
                 if (!localStorage.getItem('allAccountsData')) {
                     const initialData = [
                         { id: 1, email: 'admin123@gmail.com', peran: 'Admin', password: '12345678' },
@@ -309,305 +320,308 @@
                         { id: 10, email: 'frank.gray@example.com', peran: 'User', password: 'password123' },
                         { id: 11, email: 'grace.hall@example.com', peran: 'User', password: 'password123' },
                     ];
+
+                    // Hash passwords before storing them for the first time
+                    for (const account of initialData) {
+                        account.password = await hashPassword(account.password);
+                    }
                     localStorage.setItem('allAccountsData', JSON.stringify(initialData));
                 }
             }
 
-            initializeData();
+            // Panggil initializeData secara async, lalu lanjutkan proses DOMContentLoaded lainnya
+            initializeData().then(() => {
+                let allAccountsData = JSON.parse(localStorage.getItem('allAccountsData'));
+                let filteredAccountsData = [];
+                let currentPage = 1;
+                let rowsPerPage = parseInt(rowsPerPageSelect.value);
 
-            let allAccountsData = JSON.parse(localStorage.getItem('allAccountsData'));
-            let filteredAccountsData = [];
-            let currentPage = 1;
-            let rowsPerPage = parseInt(rowsPerPageSelect.value);
+                function showNotification(message, type = 'success') {
+                    notificationDiv.textContent = message;
+                    notificationDiv.className = 'notification text-white font-semibold';
 
-            function showNotification(message, type = 'success') {
-                notificationDiv.textContent = message;
-                notificationDiv.className = 'notification text-white font-semibold';
+                    if (type === 'success') {
+                        notificationDiv.classList.add('bg-green-500');
+                    } else if (type === 'error') {
+                        notificationDiv.classList.add('bg-red-500');
+                    } else if (type === 'info') {
+                        notificationDiv.classList.add('bg-blue-500');
+                    } else {
+                        notificationDiv.classList.add('bg-gray-500');
+                    }
 
-                if (type === 'success') {
-                    notificationDiv.classList.add('bg-green-500');
-                } else if (type === 'error') {
-                    notificationDiv.classList.add('bg-red-500');
-                } else if (type === 'info') {
-                    notificationDiv.classList.add('bg-blue-500');
-                } else {
-                    notificationDiv.classList.add('bg-gray-500');
+                    notificationDiv.style.display = 'block';
+                    setTimeout(() => {
+                        notificationDiv.style.display = 'none';
+                    }, 3000);
                 }
 
-                notificationDiv.style.display = 'block';
-                setTimeout(() => {
-                    notificationDiv.style.display = 'none';
-                }, 3000);
-            }
-
-            const notificationMessage = sessionStorage.getItem('notificationMessage');
-            const notificationType = sessionStorage.getItem('notificationType');
-            if (notificationMessage && notificationType) {
-                showNotification(notificationMessage, notificationType);
-                sessionStorage.removeItem('notificationMessage');
-                sessionStorage.removeItem('notificationType');
-            }
-
-            function applySearchAndFilter() {
-                const searchTerm = searchInput.value.toLowerCase();
-                filteredAccountsData = allAccountsData.filter(account => {
-                    return (
-                        (account.email && account.email.toLowerCase().includes(searchTerm)) ||
-                        (account.peran && account.peran.toLowerCase().includes(searchTerm)) ||
-                        (account.password && account.password.toLowerCase().includes(searchTerm))
-                    );
-                });
-                currentPage = 1;
-                renderTableAndPagination();
-            }
-
-            function renderTableAndPagination() {
-                accountsTableBody.innerHTML = '';
-
-                const totalRecords = filteredAccountsData.length;
-                const totalPages = Math.ceil(totalRecords / rowsPerPage);
-
-                if (currentPage > totalPages && totalPages > 0) {
-                    currentPage = totalPages;
-                } else if (currentPage === 0 && totalPages > 0) {
-                    currentPage = 1;
-                } else if (totalPages === 0) {
-                    currentPage = 0;
+                const notificationMessage = sessionStorage.getItem('notificationMessage');
+                const notificationType = sessionStorage.getItem('notificationType');
+                if (notificationMessage && notificationType) {
+                    showNotification(notificationMessage, notificationType);
+                    sessionStorage.removeItem('notificationMessage');
+                    sessionStorage.removeItem('notificationType');
                 }
 
-                const startIndex = (currentPage - 1) * rowsPerPage;
-                const endIndex = Math.min(startIndex + rowsPerPage, totalRecords);
-                const accountsToDisplay = filteredAccountsData.slice(startIndex, endIndex);
-
-                if (accountsToDisplay.length === 0) {
-                    emptyTableMessage.classList.remove('hidden');
-                    paginationInfoStart.textContent = 0;
-                    paginationInfoEnd.textContent = 0;
-                    paginationInfoTotal.textContent = 0;
-                    pageNumbersContainer.innerHTML = '';
-                } else {
-                    emptyTableMessage.classList.add('hidden');
-                    accountsToDisplay.forEach((account, i) => {
-                        const row = document.createElement('tr');
-                        row.className = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-                        row.innerHTML = `
-                            <td class="px-6 py-4 text-sm text-gray-500 table-col-no">
-                                ${startIndex + i + 1}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                ${account.email || '-'}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                ${account.peran || '-'}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                ${account.password || '-'}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
-                                <div class="flex items-center">
-                                    <a href="editAkun.html?id=${account.id}" class="text-gray-500 hover:text-gray-700 mr-3" title="Edit Akun">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    ${account.peran !== 'Admin' ? `
-                                        <button class="text-gray-500 hover:text-gray-700 delete-btn" data-id="${account.id}" title="Hapus Akun">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    ` : ''}
-                                </div>
-                            </td>
-                        `;
-                        accountsTableBody.appendChild(row);
+                function applySearchAndFilter() {
+                    const searchTerm = searchInput.value.toLowerCase();
+                    filteredAccountsData = allAccountsData.filter(account => {
+                        return (
+                            (account.email && account.email.toLowerCase().includes(searchTerm)) ||
+                            (account.peran && account.peran.toLowerCase().includes(searchTerm)) ||
+                            (account.password && account.password.toLowerCase().includes(searchTerm))
+                        );
                     });
+                    currentPage = 1;
+                    renderTableAndPagination();
                 }
 
-                updatePaginationControls(totalPages, totalRecords, startIndex, endIndex);
-                attachEventListeners();
-            }
+                function renderTableAndPagination() {
+                    accountsTableBody.innerHTML = '';
 
-            function updatePaginationControls(totalPages, totalRecords, startIndex, endIndex) {
-                paginationInfoStart.textContent = totalRecords === 0 ? 0 : startIndex + 1;
-                paginationInfoEnd.textContent = endIndex;
-                paginationInfoTotal.textContent = totalRecords;
+                    const totalRecords = filteredAccountsData.length;
+                    const totalPages = Math.ceil(totalRecords / rowsPerPage);
 
-                pageNumbersContainer.innerHTML = '';
-
-                if (totalPages > 0) {
-                    let maxPageButtons = 5;
-                    let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
-                    let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
-
-                    if (endPage - startPage + 1 < maxPageButtons) {
-                        startPage = Math.max(1, endPage - maxPageButtons + 1);
+                    if (currentPage > totalPages && totalPages > 0) {
+                        currentPage = totalPages;
+                    } else if (currentPage === 0 && totalPages > 0) {
+                        currentPage = 1;
+                    } else if (totalPages === 0) {
+                        currentPage = 0;
                     }
 
-                    if (startPage > 1) {
-                        const firstPageButton = document.createElement('button');
-                        firstPageButton.textContent = '1';
-                        firstPageButton.classList.add(
-                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
-                            'text-gray-900', 'bg-white', 'border-r', 'border-gray-200',
-                            'hover:bg-gray-100', 'hover:text-orange-700',
-                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
-                        );
-                        firstPageButton.addEventListener('click', () => {
-                            currentPage = 1;
-                            renderTableAndPagination();
+                    const startIndex = (currentPage - 1) * rowsPerPage;
+                    const endIndex = Math.min(startIndex + rowsPerPage, totalRecords);
+                    const accountsToDisplay = filteredAccountsData.slice(startIndex, endIndex);
+
+                    if (accountsToDisplay.length === 0) {
+                        emptyTableMessage.classList.remove('hidden');
+                        paginationInfoStart.textContent = 0;
+                        paginationInfoEnd.textContent = 0;
+                        paginationInfoTotal.textContent = 0;
+                        pageNumbersContainer.innerHTML = '';
+                    } else {
+                        emptyTableMessage.classList.add('hidden');
+                        accountsToDisplay.forEach((account, i) => {
+                            const row = document.createElement('tr');
+                            row.className = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                            row.innerHTML = `
+                                <td class="px-6 py-4 text-sm text-gray-500 table-col-no">
+                                    ${startIndex + i + 1}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    ${account.email || '-'}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    ${account.peran || '-'}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    ${account.password || '-'} </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
+                                    <div class="flex items-center">
+                                        <a href="editAkun.html?id=${account.id}" class="text-gray-500 hover:text-gray-700 mr-3" title="Edit Akun">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        ${account.peran !== 'Admin' ? `
+                                            <button class="text-gray-500 hover:text-gray-700 delete-btn" data-id="${account.id}" title="Hapus Akun">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </td>
+                            `;
+                            accountsTableBody.appendChild(row);
                         });
-                        pageNumbersContainer.appendChild(firstPageButton);
-                        if (startPage > 2) {
-                            const ellipsisSpan = document.createElement('span');
-                            ellipsisSpan.textContent = '...';
-                            ellipsisSpan.classList.add(
-                                'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
-                                'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200'
-                            );
-                            pageNumbersContainer.appendChild(ellipsisSpan);
-                        }
                     }
 
-                    for (let i = startPage; i <= endPage; i++) {
-                        const pageButton = document.createElement('button');
-                        pageButton.textContent = i;
-                        pageButton.classList.add(
-                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
-                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200',
-                            'hover:bg-gray-100', 'hover:text-orange-700',
-                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
-                        );
+                    updatePaginationControls(totalPages, totalRecords, startIndex, endIndex);
+                    attachEventListeners();
+                }
 
-                        if (i === currentPage) {
-                            pageButton.classList.remove(
-                                'text-gray-900', 'bg-white', 'border-gray-200', 'hover:bg-gray-100', 'hover:text-orange-700', 'focus:text-orange-700', 'focus:ring-orange-700'
+                function updatePaginationControls(totalPages, totalRecords, startIndex, endIndex) {
+                    paginationInfoStart.textContent = totalRecords === 0 ? 0 : startIndex + 1;
+                    paginationInfoEnd.textContent = endIndex;
+                    paginationInfoTotal.textContent = totalRecords;
+
+                    pageNumbersContainer.innerHTML = '';
+
+                    if (totalPages > 0) {
+                        let maxPageButtons = 5;
+                        let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+                        let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+                        if (endPage - startPage + 1 < maxPageButtons) {
+                            startPage = Math.max(1, endPage - maxPageButtons + 1);
+                        }
+
+                        if (startPage > 1) {
+                            const firstPageButton = document.createElement('button');
+                            firstPageButton.textContent = '1';
+                            firstPageButton.classList.add(
+                                'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                                'text-gray-900', 'bg-white', 'border-r', 'border-gray-200',
+                                'hover:bg-gray-100', 'hover:text-orange-700',
+                                'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
                             );
+                            firstPageButton.addEventListener('click', () => {
+                                currentPage = 1;
+                                renderTableAndPagination();
+                            });
+                            pageNumbersContainer.appendChild(firstPageButton);
+                            if (startPage > 2) {
+                                const ellipsisSpan = document.createElement('span');
+                                ellipsisSpan.textContent = '...';
+                                ellipsisSpan.classList.add(
+                                    'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                                    'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200'
+                                );
+                                pageNumbersContainer.appendChild(ellipsisSpan);
+                            }
+                        }
+
+                        for (let i = startPage; i <= endPage; i++) {
+                            const pageButton = document.createElement('button');
+                            pageButton.textContent = i;
                             pageButton.classList.add(
-                                'text-white', 'bg-orange-500', 'border-orange-500', 'hover:bg-orange-600',
-                                'focus:text-white', 'focus:ring-white'
-                            );
-                        }
-
-                        pageButton.addEventListener('click', () => {
-                            currentPage = i;
-                            renderTableAndPagination();
-                        });
-                        pageNumbersContainer.appendChild(pageButton);
-                    }
-
-                    if (endPage < totalPages) {
-                        if (endPage < totalPages - 1) {
-                            const ellipsisSpan = document.createElement('span');
-                            ellipsisSpan.textContent = '...';
-                            ellipsisSpan.classList.add(
                                 'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
-                                'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200'
+                                'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200',
+                                'hover:bg-gray-100', 'hover:text-orange-700',
+                                'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
                             );
-                            pageNumbersContainer.appendChild(ellipsisSpan);
+
+                            if (i === currentPage) {
+                                pageButton.classList.remove(
+                                    'text-gray-900', 'bg-white', 'border-gray-200', 'hover:bg-gray-100', 'hover:text-orange-700', 'focus:text-orange-700', 'focus:ring-orange-700'
+                                );
+                                pageButton.classList.add(
+                                    'text-white', 'bg-orange-500', 'border-orange-500', 'hover:bg-orange-600',
+                                    'focus:text-white', 'focus:ring-white'
+                                );
+                            }
+
+                            pageButton.addEventListener('click', () => {
+                                currentPage = i;
+                                renderTableAndPagination();
+                            });
+                            pageNumbersContainer.appendChild(pageButton);
                         }
-                        const lastPageButton = document.createElement('button');
-                        lastPageButton.textContent = totalPages;
-                        lastPageButton.classList.add(
-                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
-                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200',
-                            'hover:bg-gray-100', 'hover:text-orange-700',
-                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
-                        );
-                        lastPageButton.addEventListener('click', () => {
-                            currentPage = totalPages;
-                            renderTableAndPagination();
-                        });
-                        pageNumbersContainer.appendChild(lastPageButton);
+
+                        if (endPage < totalPages) {
+                            if (endPage < totalPages - 1) {
+                                const ellipsisSpan = document.createElement('span');
+                                ellipsisSpan.textContent = '...';
+                                ellipsisSpan.classList.add(
+                                    'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                                    'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200'
+                                );
+                                pageNumbersContainer.appendChild(ellipsisSpan);
+                            }
+                            const lastPageButton = document.createElement('button');
+                            lastPageButton.textContent = totalPages;
+                            lastPageButton.classList.add(
+                                'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                                'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200',
+                                'hover:bg-gray-100', 'hover:text-orange-700',
+                                'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
+                            );
+                            lastPageButton.addEventListener('click', () => {
+                                currentPage = totalPages;
+                                renderTableAndPagination();
+                            });
+                            pageNumbersContainer.appendChild(lastPageButton);
+                        }
+
+                        if (pageNumbersContainer.lastChild) {
+                            pageNumbersContainer.lastChild.classList.add('border-r');
+                        }
                     }
 
-                    if (pageNumbersContainer.lastChild) {
-                        pageNumbersContainer.lastChild.classList.add('border-r');
+                    prevPageButton.classList.toggle('disabled', currentPage === 1 || totalPages === 0);
+                    nextPageButton.classList.toggle('disabled', currentPage === totalPages || totalPages === 0);
+                }
+
+                // Fungsi untuk menghapus akun (dipanggil setelah konfirmasi)
+                function deleteAccount(id) {
+                    allAccountsData = allAccountsData.filter(account => account.id !== id);
+                    localStorage.setItem('allAccountsData', JSON.stringify(allAccountsData));
+                    showNotification('Akun berhasil dihapus.', 'success');
+                    applySearchAndFilter(); // Render ulang tabel
+                }
+
+                // Menggunakan event delegation pada accountsTableBody untuk tombol-tombol yang dinamis
+                function attachEventListeners() {
+                    accountsTableBody.removeEventListener('click', handleAccountsTableButtonClick);
+                    accountsTableBody.addEventListener('click', handleAccountsTableButtonClick);
+                }
+
+                function handleAccountsTableButtonClick(event) {
+                    const target = event.target.closest('.delete-btn');
+                    if (!target) return;
+
+                    const accountId = parseInt(target.dataset.id);
+                    accountIdToDelete = accountId;
+
+                    const accountData = allAccountsData.find(account => account.id === accountId);
+
+                    confirmModalTitle.textContent = `Hapus Akun?`;
+                    confirmModalMessage.textContent = `Apakah Anda yakin ingin menghapus akun "${accountData.email}"?`;
+                    confirmActionButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    confirmActionButton.classList.add('bg-red-600', 'hover:bg-red-700');
+                    confirmModal.style.display = 'flex';
+                }
+
+                // Event listener untuk tombol "Hapus" di modal konfirmasi
+                confirmActionButton.onclick = function () {
+                    if (accountIdToDelete !== null) {
+                        deleteAccount(accountIdToDelete);
+                        confirmModal.style.display = 'none';
+                        accountIdToDelete = null;
                     }
-                }
+                };
 
-                prevPageButton.classList.toggle('disabled', currentPage === 1 || totalPages === 0);
-                nextPageButton.classList.toggle('disabled', currentPage === totalPages || totalPages === 0);
-            }
-
-            // Fungsi untuk menghapus akun (dipanggil setelah konfirmasi)
-            function deleteAccount(id) {
-                allAccountsData = allAccountsData.filter(account => account.id !== id);
-                localStorage.setItem('allAccountsData', JSON.stringify(allAccountsData));
-                showNotification('Akun berhasil dihapus.', 'success');
-                applySearchAndFilter(); // Render ulang tabel
-            }
-
-            // Menggunakan event delegation pada accountsTableBody untuk tombol-tombol yang dinamis
-            function attachEventListeners() {
-                // Hapus event listener lama untuk mencegah duplikasi
-                accountsTableBody.removeEventListener('click', handleAccountsTableButtonClick);
-                // Tambahkan event listener baru
-                accountsTableBody.addEventListener('click', handleAccountsTableButtonClick);
-            }
-
-            function handleAccountsTableButtonClick(event) {
-                const target = event.target.closest('.delete-btn');
-                if (!target) return;
-
-                const accountId = parseInt(target.dataset.id);
-                accountIdToDelete = accountId; // Simpan ID akun yang akan dihapus
-
-                const accountData = allAccountsData.find(account => account.id === accountId);
-
-                confirmModalTitle.textContent = `Hapus Akun?`;
-                confirmModalMessage.textContent = `Apakah Anda yakin ingin menghapus akun "${accountData.email}"?`;
-                confirmActionButton.classList.remove('bg-blue-600', 'hover:bg-blue-700'); // Pastikan warna tombol hapus merah
-                confirmActionButton.classList.add('bg-red-600', 'hover:bg-red-700');
-                confirmModal.style.display = 'flex';
-            }
-
-            // Event listener untuk tombol "Hapus" di modal konfirmasi
-            confirmActionButton.onclick = function () {
-                if (accountIdToDelete !== null) {
-                    deleteAccount(accountIdToDelete);
-                    confirmModal.style.display = 'none';
-                    accountIdToDelete = null; // Reset ID
-                }
-            };
-
-            // Event listener untuk tombol "Batal" di modal konfirmasi
-            cancelConfirmButton.onclick = function () {
-                confirmModal.style.display = 'none';
-                accountIdToDelete = null; // Reset ID
-            };
-
-            // Menutup modal jika klik di luar area konten modal
-            window.onclick = function (event) {
-                if (event.target === confirmModal) {
+                // Event listener untuk tombol "Batal" di modal konfirmasi
+                cancelConfirmButton.onclick = function () {
                     confirmModal.style.display = 'none';
                     accountIdToDelete = null;
-                }
-            };
+                };
 
-            // Event Listeners for pagination controls
-            prevPageButton.addEventListener('click', () => {
-                if (currentPage > 1) {
-                    currentPage--;
+                // Menutup modal jika klik di luar area konten modal
+                window.onclick = function (event) {
+                    if (event.target === confirmModal) {
+                        confirmModal.style.display = 'none';
+                        accountIdToDelete = null;
+                    }
+                };
+
+                // Event Listeners for pagination controls
+                prevPageButton.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderTableAndPagination();
+                    }
+                });
+
+                nextPageButton.addEventListener('click', () => {
+                    const totalPages = Math.ceil(filteredAccountsData.length / rowsPerPage);
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderTableAndPagination();
+                    }
+                });
+
+                rowsPerPageSelect.addEventListener('change', (event) => {
+                    rowsPerPage = parseInt(event.target.value);
+                    currentPage = 1;
                     renderTableAndPagination();
-                }
+                });
+
+                // Search/Filter Event Listener
+                searchInput.addEventListener('input', applySearchAndFilter);
+
+                // Initial load dilakukan setelah initializeData selesai
+                applySearchAndFilter();
             });
-
-            nextPageButton.addEventListener('click', () => {
-                const totalPages = Math.ceil(filteredAccountsData.length / rowsPerPage);
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    renderTableAndPagination();
-                }
-            });
-
-            rowsPerPageSelect.addEventListener('change', (event) => {
-                rowsPerPage = parseInt(event.target.value);
-                currentPage = 1;
-                renderTableAndPagination();
-            });
-
-            // Search/Filter Event Listener
-            searchInput.addEventListener('input', applySearchAndFilter);
-
-            // Initial load
-            applySearchAndFilter();
         });
     </script>
 </body>
