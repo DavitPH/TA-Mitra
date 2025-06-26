@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Akun Pengguna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Fixed Sidebar Styling */
+        .fixed-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 50;
+        }
+
+        /* Adjust main content margin to prevent overlap with fixed sidebar */
+        .main-content-margin {
+            margin-left: 16rem;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .fixed-sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-radius: 0;
+            }
+
+            .main-content-margin {
+                margin-left: 0;
+            }
+
+            .flex-col.md\:flex-row {
+                flex-direction: column;
+            }
+        }
+
+        /* New style for the "No." column to make it narrower */
+        .table-col-no {
+            width: 1%;
+            white-space: nowrap;
+            text-align: center;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        /* Custom Orange for buttons */
+        .bg-orange-custom {
+            background-color: #F97A00;
+        }
+
+        .hover\:bg-orange-darker-custom:hover {
+            background-color: #E06C00;
+        }
+
+        /* Notification styling */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            display: none;
+            /* Hidden by default */
+        }
+
+        /* Styling for modals (mapModal, confirmModal) - copied from daftarSpesies.html */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+
+    <aside class="w-64 bg-green-700 text-white flex flex-col p-4 rounded-r-lg shadow-lg fixed-sidebar">
+        <div class="flex items-center justify-center mb-10 mt-4">
+            <div class="w-20 h-20 flex items-center justify-center p-2">
+                <img src="logo.png" alt="Snail Logo" class="w-full h-full object-contain">
+            </div>
+        </div>
+        <nav class="flex-grow">
+            <ul>
+                <li class="mb-4">
+                    <a href="daftarSpesies.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-bug text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Invertebrata</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarKomentar.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-comment-alt text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Komentar</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarAkun.html" class="flex items-center p-3 rounded-lg bg-green-800 shadow-md">
+                        <i class="fas fa-users text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Akun Pengguna</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-green-600">
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                <i class="fas fa-sign-out-alt text-xl mr-3"></i>
+                <span class="font-medium text-lg">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 main-content-margin">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Daftar Akun Pengguna</h1>
+        </header>
+
+        <div id="notification" class="notification text-white font-semibold"></div>
+
+        <section class="flex flex-col md:flex-row items-center justify-between bg-white p-6 rounded-xl shadow-md mb-8">
+            <div class="relative flex-grow w-full md:w-auto mr-0 md:mr-4 mb-4 md:mb-0">
+                <input type="text" placeholder="Cari akun..." id="searchInput"
+                    class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
+            </div>
+        </section>
+
+        <section class="bg-white p-6 rounded-xl shadow-md overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider table-col-no rounded-tl-lg">
+                            No.
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Email</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Peran</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Kata Sandi</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">
+                            Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="accountsTableBody">
+                </tbody>
+            </table>
+            <div id="emptyTableMessage" class="text-center text-gray-500 py-4 hidden">
+                Tidak ada data akun yang ditemukan.
+            </div>
+        </section>
+
+        <div class="flex flex-col md:flex-row items-center justify-between mt-8">
+            <div class="mb-4 md:mb-0 text-gray-700">
+                Menampilkan <span id="paginationInfoStart">0</span> sampai <span id="paginationInfoEnd">0</span> dari
+                <span id="paginationInfoTotal">0</span> entri
+            </div>
+
+            <nav class="flex justify-end">
+                <div class="inline-flex rounded-md shadow-sm -space-x-px" role="group">
+                    <button type="button" id="prevPageButton"
+                        class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 hover:text-orange-700 focus:z-10 focus:ring-2 focus:ring-orange-700 focus:text-orange-700">
+                        Previous
+                    </button>
+                    <div id="pageNumbersContainer" class="inline-flex">
+                    </div>
+                    <button type="button" id="nextPageButton"
+                        class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-md hover:bg-gray-100 hover:text-orange-700 focus:z-10 focus:ring-2 focus:ring-orange-700 focus:text-orange-700">
+                        Next
+                    </button>
+                </div>
+            </nav>
+
+            <div class="flex items-center text-gray-700 mt-4 md:mt-0">
+                <span class="mr-2">Rows Per Page:</span>
+                <div class="relative inline-block text-left">
+                    <select id="rowsPerPageSelect"
+                        class="block appearance-none w-full bg-white border border-gray-300 hover:border-gray-400 px-4 py-2 pr-8 rounded-lg shadow leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="confirmModal" class="modal">
+        <div class="modal-content max-w-sm">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800" id="confirmModalTitle"></h3>
+            <p class="text-gray-700 mb-6" id="confirmModalMessage"></p>
+            <div class="flex justify-end space-x-4">
+                <button id="cancelConfirmButton"
+                    class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors">
+                    Batal
+                </button>
+                <button id="confirmActionButton"
+                    class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors">
+                    Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accountsTableBody = document.getElementById('accountsTableBody');
+            const searchInput = document.getElementById('searchInput');
+            const emptyTableMessage = document.getElementById('emptyTableMessage');
+            const paginationInfoStart = document.getElementById('paginationInfoStart');
+            const paginationInfoEnd = document.getElementById('paginationInfoEnd');
+            const paginationInfoTotal = document.getElementById('paginationInfoTotal');
+            const prevPageButton = document.getElementById('prevPageButton');
+            const nextPageButton = document.getElementById('nextPageButton');
+            const pageNumbersContainer = document.getElementById('pageNumbersContainer');
+            const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
+            const notificationDiv = document.getElementById('notification');
+
+            // Variabel untuk Modal Konfirmasi
+            const confirmModal = document.getElementById('confirmModal');
+            const confirmActionButton = document.getElementById('confirmActionButton');
+            const cancelConfirmButton = document.getElementById('cancelConfirmButton');
+            const confirmModalTitle = document.getElementById('confirmModalTitle');
+            const confirmModalMessage = document.getElementById('confirmModalMessage');
+            let accountIdToDelete = null; // Menyimpan ID akun yang akan dihapus
+
+            function initializeData() {
+                if (!localStorage.getItem('allAccountsData')) {
+                    const initialData = [
+                        { id: 1, email: 'admin123@gmail.com', peran: 'Admin', password: '12345678' },
+                        { id: 2, email: 'john.doe@example.com', peran: 'User', password: 'password123' },
+                        { id: 3, email: 'jane.smith@example.com', peran: 'User', password: 'password123' },
+                        { id: 4, email: 'peter.jones@example.com', peran: 'User', password: 'password123' },
+                        { id: 5, email: 'alice.brown@example.com', peran: 'User', password: 'password123' },
+                        { id: 6, email: 'bob.white@example.com', peran: 'User', password: 'password123' },
+                        { id: 7, email: 'charlie.green@example.com', peran: 'User', password: 'password123' },
+                        { id: 8, email: 'diana.blue@example.com', peran: 'User', password: 'password123' },
+                        { id: 9, email: 'eve.black@example.com', peran: 'User', password: 'password123' },
+                        { id: 10, email: 'frank.gray@example.com', peran: 'User', password: 'password123' },
+                        { id: 11, email: 'grace.hall@example.com', peran: 'User', password: 'password123' },
+                    ];
+                    localStorage.setItem('allAccountsData', JSON.stringify(initialData));
+                }
+            }
+
+            initializeData();
+
+            let allAccountsData = JSON.parse(localStorage.getItem('allAccountsData'));
+            let filteredAccountsData = [];
+            let currentPage = 1;
+            let rowsPerPage = parseInt(rowsPerPageSelect.value);
+
+            function showNotification(message, type = 'success') {
+                notificationDiv.textContent = message;
+                notificationDiv.className = 'notification text-white font-semibold';
+
+                if (type === 'success') {
+                    notificationDiv.classList.add('bg-green-500');
+                } else if (type === 'error') {
+                    notificationDiv.classList.add('bg-red-500');
+                } else if (type === 'info') {
+                    notificationDiv.classList.add('bg-blue-500');
+                } else {
+                    notificationDiv.classList.add('bg-gray-500');
+                }
+
+                notificationDiv.style.display = 'block';
+                setTimeout(() => {
+                    notificationDiv.style.display = 'none';
+                }, 3000);
+            }
+
+            const notificationMessage = sessionStorage.getItem('notificationMessage');
+            const notificationType = sessionStorage.getItem('notificationType');
+            if (notificationMessage && notificationType) {
+                showNotification(notificationMessage, notificationType);
+                sessionStorage.removeItem('notificationMessage');
+                sessionStorage.removeItem('notificationType');
+            }
+
+            function applySearchAndFilter() {
+                const searchTerm = searchInput.value.toLowerCase();
+                filteredAccountsData = allAccountsData.filter(account => {
+                    return (
+                        (account.email && account.email.toLowerCase().includes(searchTerm)) ||
+                        (account.peran && account.peran.toLowerCase().includes(searchTerm)) ||
+                        (account.password && account.password.toLowerCase().includes(searchTerm))
+                    );
+                });
+                currentPage = 1;
+                renderTableAndPagination();
+            }
+
+            function renderTableAndPagination() {
+                accountsTableBody.innerHTML = '';
+
+                const totalRecords = filteredAccountsData.length;
+                const totalPages = Math.ceil(totalRecords / rowsPerPage);
+
+                if (currentPage > totalPages && totalPages > 0) {
+                    currentPage = totalPages;
+                } else if (currentPage === 0 && totalPages > 0) {
+                    currentPage = 1;
+                } else if (totalPages === 0) {
+                    currentPage = 0;
+                }
+
+                const startIndex = (currentPage - 1) * rowsPerPage;
+                const endIndex = Math.min(startIndex + rowsPerPage, totalRecords);
+                const accountsToDisplay = filteredAccountsData.slice(startIndex, endIndex);
+
+                if (accountsToDisplay.length === 0) {
+                    emptyTableMessage.classList.remove('hidden');
+                    paginationInfoStart.textContent = 0;
+                    paginationInfoEnd.textContent = 0;
+                    paginationInfoTotal.textContent = 0;
+                    pageNumbersContainer.innerHTML = '';
+                } else {
+                    emptyTableMessage.classList.add('hidden');
+                    accountsToDisplay.forEach((account, i) => {
+                        const row = document.createElement('tr');
+                        row.className = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                        row.innerHTML = `
+                            <td class="px-6 py-4 text-sm text-gray-500 table-col-no">
+                                ${startIndex + i + 1}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${account.email || '-'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${account.peran || '-'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${account.password || '-'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
+                                <div class="flex items-center">
+                                    <a href="editAkun.html?id=${account.id}" class="text-gray-500 hover:text-gray-700 mr-3" title="Edit Akun">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    ${account.peran !== 'Admin' ? `
+                                        <button class="text-gray-500 hover:text-gray-700 delete-btn" data-id="${account.id}" title="Hapus Akun">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        `;
+                        accountsTableBody.appendChild(row);
+                    });
+                }
+
+                updatePaginationControls(totalPages, totalRecords, startIndex, endIndex);
+                attachEventListeners();
+            }
+
+            function updatePaginationControls(totalPages, totalRecords, startIndex, endIndex) {
+                paginationInfoStart.textContent = totalRecords === 0 ? 0 : startIndex + 1;
+                paginationInfoEnd.textContent = endIndex;
+                paginationInfoTotal.textContent = totalRecords;
+
+                pageNumbersContainer.innerHTML = '';
+
+                if (totalPages > 0) {
+                    let maxPageButtons = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+                    let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+                    if (endPage - startPage + 1 < maxPageButtons) {
+                        startPage = Math.max(1, endPage - maxPageButtons + 1);
+                    }
+
+                    if (startPage > 1) {
+                        const firstPageButton = document.createElement('button');
+                        firstPageButton.textContent = '1';
+                        firstPageButton.classList.add(
+                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                            'text-gray-900', 'bg-white', 'border-r', 'border-gray-200',
+                            'hover:bg-gray-100', 'hover:text-orange-700',
+                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
+                        );
+                        firstPageButton.addEventListener('click', () => {
+                            currentPage = 1;
+                            renderTableAndPagination();
+                        });
+                        pageNumbersContainer.appendChild(firstPageButton);
+                        if (startPage > 2) {
+                            const ellipsisSpan = document.createElement('span');
+                            ellipsisSpan.textContent = '...';
+                            ellipsisSpan.classList.add(
+                                'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                                'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200'
+                            );
+                            pageNumbersContainer.appendChild(ellipsisSpan);
+                        }
+                    }
+
+                    for (let i = startPage; i <= endPage; i++) {
+                        const pageButton = document.createElement('button');
+                        pageButton.textContent = i;
+                        pageButton.classList.add(
+                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200',
+                            'hover:bg-gray-100', 'hover:text-orange-700',
+                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
+                        );
+
+                        if (i === currentPage) {
+                            pageButton.classList.remove(
+                                'text-gray-900', 'bg-white', 'border-gray-200', 'hover:bg-gray-100', 'hover:text-orange-700', 'focus:text-orange-700', 'focus:ring-orange-700'
+                            );
+                            pageButton.classList.add(
+                                'text-white', 'bg-orange-500', 'border-orange-500', 'hover:bg-orange-600',
+                                'focus:text-white', 'focus:ring-white'
+                            );
+                        }
+
+                        pageButton.addEventListener('click', () => {
+                            currentPage = i;
+                            renderTableAndPagination();
+                        });
+                        pageNumbersContainer.appendChild(pageButton);
+                    }
+
+                    if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) {
+                            const ellipsisSpan = document.createElement('span');
+                            ellipsisSpan.textContent = '...';
+                            ellipsisSpan.classList.add(
+                                'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                                'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200'
+                            );
+                            pageNumbersContainer.appendChild(ellipsisSpan);
+                        }
+                        const lastPageButton = document.createElement('button');
+                        lastPageButton.textContent = totalPages;
+                        lastPageButton.classList.add(
+                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200',
+                            'hover:bg-gray-100', 'hover:text-orange-700',
+                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
+                        );
+                        lastPageButton.addEventListener('click', () => {
+                            currentPage = totalPages;
+                            renderTableAndPagination();
+                        });
+                        pageNumbersContainer.appendChild(lastPageButton);
+                    }
+
+                    if (pageNumbersContainer.lastChild) {
+                        pageNumbersContainer.lastChild.classList.add('border-r');
+                    }
+                }
+
+                prevPageButton.classList.toggle('disabled', currentPage === 1 || totalPages === 0);
+                nextPageButton.classList.toggle('disabled', currentPage === totalPages || totalPages === 0);
+            }
+
+            // Fungsi untuk menghapus akun (dipanggil setelah konfirmasi)
+            function deleteAccount(id) {
+                allAccountsData = allAccountsData.filter(account => account.id !== id);
+                localStorage.setItem('allAccountsData', JSON.stringify(allAccountsData));
+                showNotification('Akun berhasil dihapus.', 'success');
+                applySearchAndFilter(); // Render ulang tabel
+            }
+
+            // Menggunakan event delegation pada accountsTableBody untuk tombol-tombol yang dinamis
+            function attachEventListeners() {
+                // Hapus event listener lama untuk mencegah duplikasi
+                accountsTableBody.removeEventListener('click', handleAccountsTableButtonClick);
+                // Tambahkan event listener baru
+                accountsTableBody.addEventListener('click', handleAccountsTableButtonClick);
+            }
+
+            function handleAccountsTableButtonClick(event) {
+                const target = event.target.closest('.delete-btn');
+                if (!target) return;
+
+                const accountId = parseInt(target.dataset.id);
+                accountIdToDelete = accountId; // Simpan ID akun yang akan dihapus
+
+                const accountData = allAccountsData.find(account => account.id === accountId);
+
+                confirmModalTitle.textContent = `Hapus Akun?`;
+                confirmModalMessage.textContent = `Apakah Anda yakin ingin menghapus akun "${accountData.email}"?`;
+                confirmActionButton.classList.remove('bg-blue-600', 'hover:bg-blue-700'); // Pastikan warna tombol hapus merah
+                confirmActionButton.classList.add('bg-red-600', 'hover:bg-red-700');
+                confirmModal.style.display = 'flex';
+            }
+
+            // Event listener untuk tombol "Hapus" di modal konfirmasi
+            confirmActionButton.onclick = function () {
+                if (accountIdToDelete !== null) {
+                    deleteAccount(accountIdToDelete);
+                    confirmModal.style.display = 'none';
+                    accountIdToDelete = null; // Reset ID
+                }
+            };
+
+            // Event listener untuk tombol "Batal" di modal konfirmasi
+            cancelConfirmButton.onclick = function () {
+                confirmModal.style.display = 'none';
+                accountIdToDelete = null; // Reset ID
+            };
+
+            // Menutup modal jika klik di luar area konten modal
+            window.onclick = function (event) {
+                if (event.target === confirmModal) {
+                    confirmModal.style.display = 'none';
+                    accountIdToDelete = null;
+                }
+            };
+
+            // Event Listeners for pagination controls
+            prevPageButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTableAndPagination();
+                }
+            });
+
+            nextPageButton.addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredAccountsData.length / rowsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTableAndPagination();
+                }
+            });
+
+            rowsPerPageSelect.addEventListener('change', (event) => {
+                rowsPerPage = parseInt(event.target.value);
+                currentPage = 1;
+                renderTableAndPagination();
+            });
+
+            // Search/Filter Event Listener
+            searchInput.addEventListener('input', applySearchAndFilter);
+
+            // Initial load
+            applySearchAndFilter();
+        });
+    </script>
+</body>
+
+</html>

@@ -88,6 +88,59 @@
                 margin-bottom: 1rem;
             }
         }
+
+        /* Styling untuk modal konfirmasi */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        /* Styling untuk notifikasi sukses (berubah ke kanan atas sesuai referensi) */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            /* Posisi dari atas */
+            right: 1rem;
+            /* Posisi dari kanan */
+            padding: 0.75rem 1.5rem;
+            /* Padding */
+            border-radius: 0.5rem;
+            /* Sudut membulat */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            /* Bayangan */
+            z-index: 1000;
+            display: none;
+            /* Hidden by default */
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            font-weight: 500;
+            background-color: #10B981;
+            /* Default green background */
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -96,7 +149,7 @@
     <!-- Main Navigation Sidebar -->
     <aside class="w-64 bg-green-700 text-white flex flex-col p-4 rounded-r-lg shadow-lg fixed-sidebar">
         <div class="flex items-center justify-center mb-10 mt-4">
-            <div class="w-20 h-20  flex items-center justify-center p-2">
+            <div class="w-20 h-20 flex items-center justify-center p-2">
                 <!-- Snail logo from your provided image -->
                 <img src="logo.png" alt="Snail Logo" class="w-full h-full object-contain">
             </div>
@@ -116,12 +169,18 @@
                         <span class="font-medium text-lg">Komentar</span>
                     </a>
                 </li>
-
+                <li class="mb-4">
+                    <a href="daftarAkun.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-comment-alt text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Akun Pengguna</span>
+                    </a>
+                </li>
             </ul>
         </nav>
         <!-- Bagian bawah sidebar, bisa untuk logout atau info lainnya -->
         <div class="mt-auto pt-4 border-t border-green-600">
-            <a href="login.html" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
                 <i class="fas fa-sign-out-alt text-xl mr-3"></i>
                 <span class="font-medium text-lg">Logout</span>
             </a>
@@ -130,6 +189,11 @@
 
     <!-- Konten Utama Aplikasi -->
     <main class="flex-1 p-8 main-content-margin">
+        <!-- Notifikasi Sukses dipindahkan ke sini untuk berada di atas konten utama secara visual, tapi posisi tetap fixed -->
+        <div id="successNotification" class="notification text-white font-semibold">
+            <!-- Pesan akan diisi oleh JavaScript -->
+        </div>
+
         <!-- Navigasi Breadcrumb -->
         <nav class="mb-6 text-gray-600 text-lg">
             <a href="daftarKomentar.html" class="hover:underline">Daftar Komentar</a>
@@ -168,7 +232,8 @@
                     <div class="flex-1">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center space-x-2">
-                                <span class="font-semibold text-gray-900">davitputra@example.com</span>
+                                <span
+                                    class="font-semibold text-gray-900 comment-author-email">davitputra@example.com</span>
                                 <span class="text-gray-500 text-sm">1 Juli 2025</span>
                             </div>
                             <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
@@ -202,7 +267,8 @@
                                 <div class="flex-1">
                                     <div class="flex justify-between items-center mb-1">
                                         <div class="flex items-center space-x-2">
-                                            <span class="font-semibold text-gray-900">admin@mitra.com</span>
+                                            <span
+                                                class="font-semibold text-gray-900 comment-author-email">admin@mitra.com</span>
                                             <span class="text-gray-500 text-sm">1 Juli 2025</span>
                                         </div>
                                         <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
@@ -237,7 +303,8 @@
                                 <div class="flex-1">
                                     <div class="flex justify-between items-center mb-1">
                                         <div class="flex items-center space-x-2">
-                                            <span class="font-semibold text-gray-900">anonymous@user.com</span>
+                                            <span
+                                                class="font-semibold text-gray-900 comment-author-email">anonymous@user.com</span>
                                             <span class="text-gray-500 text-sm">2 Juli 2025</span>
                                         </div>
                                         <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
@@ -276,7 +343,7 @@
                     <div class="flex-1">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center space-x-2">
-                                <span class="font-semibold text-gray-900">anna@example.com</span>
+                                <span class="font-semibold text-gray-900 comment-author-email">anna@example.com</span>
                                 <span class="text-gray-500 text-sm">30 Juni 2025</span>
                             </div>
                             <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
@@ -310,7 +377,8 @@
                                 <div class="flex-1">
                                     <div class="flex justify-between items-center mb-1">
                                         <div class="flex items-center space-x-2">
-                                            <span class="font-semibold text-gray-900">admin@mitra.com</span>
+                                            <span
+                                                class="font-semibold text-gray-900 comment-author-email">admin@mitra.com</span>
                                             <span class="text-gray-500 text-sm">30 Juni 2025</span>
                                         </div>
                                         <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
@@ -350,7 +418,7 @@
                     <div class="flex-1">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center space-x-2">
-                                <span class="font-semibold text-gray-900">joko@example.com</span>
+                                <span class="font-semibold text-gray-900 comment-author-email">joko@example.com</span>
                                 <span class="text-gray-500 text-sm">29 Juni 2025</span>
                             </div>
                             <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn"
@@ -382,6 +450,20 @@
         </section>
     </main>
 
+    <!-- Modal Konfirmasi Hapus -->
+    <div id="deleteConfirmationModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Hapus Komentar?</h2>
+            <p id="deleteMessage" class="text-gray-700 mb-6"></p>
+            <div class="flex justify-center space-x-4">
+                <button id="cancelDeleteBtn"
+                    class="px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors">Batal</button>
+                <button id="confirmDeleteBtn"
+                    class="px-6 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors">Ya</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Referensi elemen DOM
@@ -390,7 +472,19 @@
             const sendCommentButton = document.getElementById('sendCommentButton');
             const commentsList = document.getElementById('commentsList');
 
-            // Variabel untuk menghitung total komentar (perbaikan sintaks)
+            // Elemen modal
+            const deleteConfirmationModal = document.getElementById('deleteConfirmationModal');
+            const deleteMessage = document.getElementById('deleteMessage');
+            const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+            // Elemen notifikasi
+            const successNotification = document.getElementById('successNotification');
+
+            let commentToDelete = null; // Menyimpan referensi elemen komentar yang akan dihapus
+            let authorEmailOfCommentToDelete = ''; // Menyimpan email penulis komentar yang akan dihapus
+
+            // Variabel untuk menghitung total komentar
             let totalComments;
 
             // Fungsi untuk menghitung semua komentar dan balasan
@@ -404,6 +498,29 @@
             function updateTotalCommentsDisplay() {
                 totalCommentsHeader.textContent = `Komentar (${totalComments})`;
                 console.log(`[DEBUG] Total Komentar diperbarui: ${totalComments}`); // Log untuk debug
+            }
+
+            // Fungsi untuk menampilkan notifikasi sukses
+            function showSuccessNotification(message) {
+                successNotification.textContent = message;
+                successNotification.style.display = 'block';
+                // Paksa reflow untuk transisi CSS
+                successNotification.offsetWidth;
+                successNotification.classList.add('show');
+
+                // Tambahkan kelas background sesuai jenis notifikasi. Untuk notifikasi sukses defaultnya green.
+                successNotification.classList.add('bg-green-500');
+
+
+                setTimeout(() => {
+                    successNotification.classList.remove('show');
+                    // Tunggu transisi selesai sebelum menyembunyikan display
+                    setTimeout(() => {
+                        successNotification.style.display = 'none';
+                        // Hapus kelas background setelah tersembunyi
+                        successNotification.classList.remove('bg-green-500');
+                    }, 500); // Sesuaikan dengan durasi transisi CSS
+                }, 3000); // Notifikasi akan hilang setelah 3 detik
             }
 
             // Fungsi untuk membuat elemen komentar atau balasan baru
@@ -444,7 +561,7 @@
                     <div class="flex-1">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center space-x-2"> 
-                                <span class="font-semibold text-gray-900">${authorEmail}</span>
+                                <span class="font-semibold text-gray-900 comment-author-email">${authorEmail}</span>
                                 <span class="text-gray-500 text-sm">${date}</span>
                             </div>
                             <button class="text-gray-400 hover:text-red-500 transition-colors delete-btn" data-comment-id="${commentElement.id}"><i class="fas fa-trash"></i></button>
@@ -477,12 +594,14 @@
                 if (deleteButton) {
                     deleteButton.addEventListener('click', function () {
                         // Temukan elemen wrapper terluar yang memiliki ID "comment-"
-                        // Ini akan menghapus seluruh kartu komentar/balasan
                         const outermostWrapper = commentElement.closest('[id^="comment-"]');
                         if (outermostWrapper) {
-                            outermostWrapper.remove();
-                            totalComments--; // Kurangi totalComments
-                            updateTotalCommentsDisplay(); // Perbarui tampilan
+                            commentToDelete = outermostWrapper; // Simpan referensi ke elemen yang akan dihapus
+                            const authorEmailElement = commentToDelete.querySelector('.comment-author-email');
+                            authorEmailOfCommentToDelete = authorEmailElement ? authorEmailElement.textContent : 'pengguna ini'; // Ambil email atau fallback
+
+                            deleteMessage.textContent = `Hapus pesan pengguna ${authorEmailOfCommentToDelete}?`;
+                            deleteConfirmationModal.style.display = 'flex'; // Tampilkan modal
                         }
                     });
                 }
@@ -513,7 +632,8 @@
                                 // isReply disetel true karena ini balasan
                                 const newReplyElement = createCommentElement(replyContent, 'admin@mitra.com', replyDate, true);
 
-                                repliesContainer.appendChild(newReplyElement); // Tambahkan ke daftar balasan
+                                // Gunakan appendChild untuk menambahkan balasan baru di akhir daftar balasan
+                                repliesContainer.appendChild(newReplyElement);
 
                                 totalComments++; // Tambahkan totalComments
                                 updateTotalCommentsDisplay(); // Perbarui tampilan
@@ -553,7 +673,6 @@
                 });
             }
 
-
             // --- Fungsionalitas Kirim Komentar Baru (Tingkat Atas) ---
             sendCommentButton.addEventListener('click', function () {
                 const commentContent = newCommentTextarea.value.trim();
@@ -561,12 +680,35 @@
                     const commentDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                     // Buat elemen komentar baru (bukan balasan)
                     const newCommentElement = createCommentElement(commentContent, 'admin@mitra.com', commentDate, false);
-                    commentsList.appendChild(newCommentElement); // Tambahkan ke daftar komentar utama
+                    // Gunakan prepend untuk menambahkan komentar baru di awal daftar
+                    commentsList.prepend(newCommentElement);
                     newCommentTextarea.value = ''; // Kosongkan textarea komentar baru
 
                     totalComments++; // Tambahkan totalComments
                     updateTotalCommentsDisplay(); // Perbarui tampilan
                 }
+            });
+
+            // Event listener untuk tombol konfirmasi hapus modal
+            confirmDeleteBtn.addEventListener('click', function () {
+                if (commentToDelete) {
+                    commentToDelete.remove(); // Hapus elemen komentar
+                    totalComments--; // Kurangi totalComments
+                    updateTotalCommentsDisplay(); // Perbarui tampilan
+
+                    // Tampilkan notifikasi sukses
+                    showSuccessNotification(`Komentar ${authorEmailOfCommentToDelete} berhasil dihapus.`);
+                }
+                deleteConfirmationModal.style.display = 'none'; // Sembunyikan modal
+                commentToDelete = null; // Reset referensi
+                authorEmailOfCommentToDelete = ''; // Reset email penulis
+            });
+
+            // Event listener untuk tombol batal hapus modal
+            cancelDeleteBtn.addEventListener('click', function () {
+                deleteConfirmationModal.style.display = 'none'; // Sembunyikan modal
+                commentToDelete = null; // Reset referensi
+                authorEmailOfCommentToDelete = ''; // Reset email penulis
             });
 
             // Inisialisasi hitungan komentar saat halaman dimuat

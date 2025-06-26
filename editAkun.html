@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Akun Pengguna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Fixed Sidebar Styling */
+        .fixed-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 50;
+        }
+
+        /* Adjust main content margin to prevent overlap with fixed sidebar */
+        .main-content-margin {
+            margin-left: 16rem;
+        }
+
+        /* Notification styling */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            display: none;
+            /* Hidden by default */
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .fixed-sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-radius: 0;
+            }
+
+            .main-content-margin {
+                margin-left: 0;
+            }
+
+            .flex-col.md\:flex-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+
+    <aside class="w-64 bg-green-700 text-white flex flex-col p-4 rounded-r-lg shadow-lg fixed-sidebar">
+        <div class="flex items-center justify-center mb-10 mt-4">
+            <div class="w-20 h-20 flex items-center justify-center p-2">
+                <img src="logo.png" alt="Snail Logo" class="w-full h-full object-contain">
+            </div>
+        </div>
+        <nav class="flex-grow">
+            <ul>
+                <li class="mb-4">
+                    <a href="#" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-bug text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Invertebrata</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="#" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-comment-alt text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Komentar</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="#" class="flex items-center p-3 rounded-lg bg-green-800 shadow-md">
+                        <i class="fas fa-users text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Akun Pengguna</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-green-600">
+            <a href="#" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                <i class="fas fa-sign-out-alt text-xl mr-3"></i>
+                <span class="font-medium text-lg">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 main-content-margin">
+        <nav class="mb-6 text-gray-600 text-lg">
+            <a href="daftarAkun.html" class="hover:underline">Daftar Akun Pengguna</a>
+            <span class="mx-2 font-bold text-gray-800">&gt;</span>
+            <span class="font-semibold text-gray-800">Edit Akun</span>
+        </nav>
+
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Edit Akun Pengguna</h1>
+        </header>
+
+        <div id="notification" class="notification text-white font-semibold"></div>
+
+        <section class="bg-white p-8 rounded-xl shadow-md mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Informasi Akun</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Email</label>
+                    <input type="email" id="email"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+                <div>
+                    <label for="peran" class="block text-gray-700 text-sm font-medium mb-2">Peran</label>
+                    <input type="text" id="peran"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Ganti Kata Sandi</h2>
+            <form id="changePasswordForm">
+                <div class="mb-6">
+                    <label for="new_password" class="block text-gray-700 text-sm font-medium mb-2">Kata Sandi
+                        Baru</label>
+                    <div class="relative">
+                        <input type="password" id="new_password"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all pr-10"
+                            placeholder="••••••••" required minlength="8">
+                        <button type="button" id="toggleNewPassword"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <p id="newPasswordError" class="text-red-500 text-sm mt-1 hidden"></p>
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelButton"
+                        class="px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('email');
+            const peranInput = document.getElementById('peran');
+            const newPasswordInput = document.getElementById('new_password');
+            const toggleNewPasswordButton = document.getElementById('toggleNewPassword');
+            const newPasswordError = document.getElementById('newPasswordError');
+            const changePasswordForm = document.getElementById('changePasswordForm');
+            const cancelButton = document.getElementById('cancelButton');
+            // Notification div is still here, but its direct use for success will be limited on this page.
+            const notificationDiv = document.getElementById('notification');
+
+            let allAccountsData = JSON.parse(localStorage.getItem('allAccountsData')) || [];
+
+            let accountIdToEdit = null;
+            let currentAccountData = null;
+
+            // This showNotification is mainly for error/info messages on this page, not for the success redirect.
+            function showNotification(message, type = 'success') {
+                notificationDiv.textContent = message;
+                notificationDiv.className = 'notification text-white font-semibold'; // Reset classes
+
+                if (type === 'success') {
+                    notificationDiv.classList.add('bg-green-500');
+                } else if (type === 'error') {
+                    notificationDiv.classList.add('bg-red-500');
+                } else {
+                    notificationDiv.classList.add('bg-gray-500'); // Default or info
+                }
+
+                notificationDiv.style.display = 'block';
+                setTimeout(() => {
+                    notificationDiv.style.display = 'none';
+                }, 3000); // Hide after 3 seconds
+            }
+
+            // Get account ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('id')) {
+                accountIdToEdit = parseInt(urlParams.get('id'));
+                currentAccountData = allAccountsData.find(account => account.id === accountIdToEdit);
+
+                if (currentAccountData) {
+                    emailInput.value = currentAccountData.email;
+                    peranInput.value = currentAccountData.peran;
+                } else {
+                    // This error will still show on this page before redirecting
+                    showNotification('Akun tidak ditemukan.', 'error');
+                    setTimeout(() => { // Add a small delay for the user to see the error
+                        window.location.href = 'daftarAkun.html';
+                    }, 500);
+                }
+            } else {
+                showNotification('ID Akun tidak ditemukan di URL.', 'error');
+                setTimeout(() => { // Add a small delay for the user to see the error
+                    window.location.href = 'daftarAkun.html';
+                }, 500);
+            }
+
+            // Password visibility toggles
+            toggleNewPasswordButton.addEventListener('click', function () {
+                const type = newPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                newPasswordInput.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+
+            // Validation function for new password
+            function validateNewPassword() {
+                const password = newPasswordInput.value.trim();
+                newPasswordError.classList.add('hidden');
+                newPasswordInput.classList.remove('border-red-500');
+
+                if (password.length < 8) {
+                    newPasswordError.textContent = 'Kata sandi minimal 8 karakter.';
+                    newPasswordError.classList.remove('hidden');
+                    newPasswordInput.classList.add('border-red-500');
+                    return false;
+                }
+                return true;
+            }
+
+            // Live validation on input change
+            newPasswordInput.addEventListener('input', validateNewPassword);
+
+            // Form submission handler
+            changePasswordForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const isNewPasswordValid = validateNewPassword();
+
+                if (isNewPasswordValid) {
+                    if (currentAccountData) {
+                        currentAccountData.password = newPasswordInput.value.trim();
+
+                        const index = allAccountsData.findIndex(account => account.id === accountIdToEdit);
+                        if (index !== -1) {
+                            allAccountsData[index] = currentAccountData;
+                            localStorage.setItem('allAccountsData', JSON.stringify(allAccountsData));
+
+                            console.log(`Password for ${currentAccountData.email} updated and saved to localStorage.`);
+
+                            // *** SINKRONISASI NOTIFIKASI: Simpan pesan ke sessionStorage sebelum redirect ***
+                            sessionStorage.setItem('notificationMessage', 'Kata sandi berhasil diperbarui!');
+                            sessionStorage.setItem('notificationType', 'success');
+
+                            window.location.href = 'daftarAkun.html'; // Redirect immediately after saving
+
+                        } else {
+                            showNotification('Gagal memperbarui kata sandi: Akun tidak ditemukan dalam daftar.', 'error');
+                        }
+                    } else {
+                        showNotification('Gagal memperbarui kata sandi: Data akun tidak valid.', 'error');
+                    }
+                } else {
+                    showNotification('Harap perbaiki kesalahan di formulir.', 'error');
+                }
+            });
+
+            // Cancel button functionality
+            cancelButton.addEventListener('click', function () {
+                // No notification on cancel, just redirect
+                window.location.href = 'daftarAkun.html';
+            });
+        });
+    </script>
+</body>
+
+</html>
