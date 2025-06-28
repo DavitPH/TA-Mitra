@@ -175,22 +175,22 @@
             <h2 class="text-xl font-semibold text-gray-800 mb-6">Klasifikasi</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div>
-                    <label for="filum" class="block text-gray-700 text-sm font-medium mb-2">Filum</label>
+                    <label for="filum" class="block text-gray-700 text-sm font-medium mb-2">Phylum</label>
                     <input type="text" id="filum"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                        placeholder="Filum">
+                        placeholder="Phylum">
+                </div>
+                <div>
+                    <label for="sub_filum" class="block text-gray-700 text-sm font-medium mb-2">Sub Phylum</label>
+                    <input type="text" id="sub_filum"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        placeholder="Sub Phylum">
                 </div>
                 <div>
                     <label for="kelas" class="block text-gray-700 text-sm font-medium mb-2">Kelas</label>
                     <input type="text" id="kelas"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                         placeholder="Kelas">
-                </div>
-                <div>
-                    <label for="sub_kelas" class="block text-gray-700 text-sm font-medium mb-2">Sub Kelas</label>
-                    <input type="text" id="sub_kelas"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                        placeholder="Sub Kelas">
                 </div>
             </div>
             <h2 class="text-xl font-semibold text-gray-800 mb-6">Gambar</h2>
@@ -369,8 +369,8 @@
                             document.getElementById('nama_umum').value = speciesData.nama_umum || '';
                             document.getElementById('nama_latin').value = speciesData.nama_latin || '';
                             document.getElementById('filum').value = speciesData.filum || '';
+                            document.getElementById('sub_filum').value = speciesData.sub_filum || ''; // Populating Sub Phylum
                             document.getElementById('kelas').value = speciesData.kelas || '';
-                            document.getElementById('sub_kelas').value = speciesData.sub_kelas || '';
                             document.getElementById('deskripsi').value = speciesData.deskripsi || '';
                             document.getElementById('habitat').value = speciesData.habitat || '';
                             document.getElementById('peran_ekologis').value = speciesData.peran_ekologis || '';
@@ -439,8 +439,8 @@
                     nama_umum: document.getElementById('nama_umum').value,
                     nama_latin: document.getElementById('nama_latin').value,
                     filum: document.getElementById('filum').value,
+                    sub_filum: document.getElementById('sub_filum').value, // Saving Sub Phylum
                     kelas: document.getElementById('kelas').value,
-                    sub_kelas: document.getElementById('sub_kelas').value,
                     deskripsi: document.getElementById('deskripsi').value,
                     habitat: document.getElementById('habitat').value,
                     peran_ekologis: document.getElementById('peran_ekologis').value,
@@ -462,8 +462,8 @@
                     document.getElementById('nama_umum').value = tempEditFormData.nama_umum || '';
                     document.getElementById('nama_latin').value = tempEditFormData.nama_latin || '';
                     document.getElementById('filum').value = tempEditFormData.filum || '';
+                    document.getElementById('sub_filum').value = tempEditFormData.sub_filum || ''; // Populating Sub Phylum
                     document.getElementById('kelas').value = tempEditFormData.kelas || '';
-                    document.getElementById('sub_kelas').value = tempEditFormData.sub_kelas || '';
                     document.getElementById('deskripsi').value = tempEditFormData.deskripsi || '';
                     document.getElementById('habitat').value = tempEditFormData.habitat || '';
                     document.getElementById('peran_ekologis').value = tempEditFormData.peran_ekologis || '';
@@ -541,7 +541,7 @@
                         viewButton.addEventListener('click', function () {
                             loadedMapLayers.clearLayers();
                             const selectedMapIndex = parseInt(this.closest('div[data-map-index]').dataset.mapIndex);
-                            const mapToDisplay = mapsToRender[selectedMapMapIndex];
+                            const mapToDisplay = mapsToRender[selectedMapIndex];
 
                             L.geoJSON(mapToDisplay, {
                                 style: {
@@ -622,7 +622,7 @@
 
                     const fileNameSpan = document.createElement('span');
                     fileNameSpan.className = 'text-gray-700 text-sm truncate w-32 text-center';
-                    fileNameSpan.textContent = `Image ${index + 1}`;
+                    fileNameSpan.textContent = `Gambar ${index + 1}`;
 
                     thumbnailDiv.appendChild(img);
                     thumbnailDiv.appendChild(deleteButton);
@@ -668,8 +668,8 @@
                 const nama_umum = document.getElementById('nama_umum').value.trim();
                 const nama_latin = document.getElementById('nama_latin').value.trim();
                 const filum = document.getElementById('filum').value.trim();
+                const sub_filum = document.getElementById('sub_filum').value.trim(); // Get Sub Phylum value
                 const kelas = document.getElementById('kelas').value.trim();
-                const sub_kelas = document.getElementById('sub_kelas').value.trim();
                 const deskripsi = document.getElementById('deskripsi').value.trim();
                 const habitat = document.getElementById('habitat').value.trim();
                 const peran_ekologis = document.getElementById('peran_ekologis').value.trim();
@@ -679,9 +679,9 @@
 
                 if (!nama_umum) emptyFields.push('Nama Umum');
                 if (!nama_latin) emptyFields.push('Nama Latin');
-                if (!filum) emptyFields.push('Filum');
+                if (!filum) emptyFields.push('Phylum');
+                if (!sub_filum) emptyFields.push('Sub Phylum'); // Validate Sub Phylum
                 if (!kelas) emptyFields.push('Kelas');
-                if (!sub_kelas) emptyFields.push('Sub Kelas');
                 if (!deskripsi) emptyFields.push('Deskripsi');
                 if (!habitat) emptyFields.push('Habitat');
                 if (!peran_ekologis) emptyFields.push('Peran Ekologis');
@@ -703,8 +703,8 @@
                     nama_umum,
                     nama_latin,
                     filum,
+                    sub_filum, // Save Sub Phylum
                     kelas,
-                    sub_kelas,
                     gambar: currentImages,
                     deskripsi,
                     habitat,

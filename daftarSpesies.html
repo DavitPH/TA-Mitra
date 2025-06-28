@@ -168,25 +168,6 @@
         .hover\:bg-orange-darker-custom:hover {
             background-color: #E06C00;
         }
-
-        /* Styling for the Status Publikasi text (just text) */
-        /* .toggle-status {
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-            border: 1px solid transparent;
-        }
-
-        .bg-green-100.toggle-status:hover {
-            background-color: #d1fae5;
-            color: #10b981;
-            border-color: #10b981;
-        }
-
-        .bg-yellow-100.toggle-status:hover {
-            background-color: #fef3c7;
-            color: #d97706;
-            border-color: #d97706;
-        } */
     </style>
 </head>
 
@@ -279,11 +260,11 @@
                             </th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Kelas
+                                Sub Phylum
                             </th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Sub Kelas
+                                Kelas
                             </th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -460,8 +441,8 @@
                         (species.nama_umum && species.nama_umum.toLowerCase().includes(searchTerm)) ||
                         (species.nama_latin && species.nama_latin.toLowerCase().includes(searchTerm)) ||
                         (species.filum && species.filum.toLowerCase().includes(searchTerm)) ||
-                        (species.kelas && species.kelas.toLowerCase().includes(searchTerm)) ||
-                        (species.sub_kelas && species.sub_kelas.toLowerCase().includes(searchTerm))
+                        (species.sub_filum && species.sub_filum.toLowerCase().includes(searchTerm)) || // Filter by Sub Phylum
+                        (species.kelas && species.kelas.toLowerCase().includes(searchTerm))
                     );
                 });
                 currentPage = 1;
@@ -513,10 +494,10 @@
                                 ${species.filum || '-'}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                ${species.kelas || '-'}
+                                ${species.sub_filum || '-'}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                ${species.sub_kelas || '-'}
+                                ${species.kelas || '-'}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${species.status_publikasi === 'Publish' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">

@@ -187,20 +187,20 @@
                         class="block text-gray-700 text-sm font-medium mb-2 required-label">Phylum</label>
                     <input type="text" id="filum"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                        placeholder="Filum" required>
+                        placeholder="Phylum" required>
+                </div>
+                <div>
+                    <label for="sub_filum" class="block text-gray-700 text-sm font-medium mb-2 required-label">Sub
+                        Phylum</label>
+                    <input type="text" id="sub_filum"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        placeholder="Sub Phylum" required>
                 </div>
                 <div>
                     <label for="kelas" class="block text-gray-700 text-sm font-medium mb-2 required-label">Kelas</label>
                     <input type="text" id="kelas"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                         placeholder="Kelas" required>
-                </div>
-                <div>
-                    <label for="sub_kelas" class="block text-gray-700 text-sm font-medium mb-2 required-label">Sub
-                        Kelas</label>
-                    <input type="text" id="sub_kelas"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                        placeholder="Sub Kelas" required>
                 </div>
             </div>
             <h2 class="text-xl font-semibold text-gray-800 mb-6 required-label">Gambar</h2>
@@ -381,8 +381,8 @@
                     document.getElementById('nama_umum').value = tempFormData.nama_umum || '';
                     document.getElementById('nama_latin').value = tempFormData.nama_latin || '';
                     document.getElementById('filum').value = tempFormData.filum || '';
+                    document.getElementById('sub_filum').value = tempFormData.sub_filum || ''; // Populating Sub Phylum
                     document.getElementById('kelas').value = tempFormData.kelas || '';
-                    document.getElementById('sub_kelas').value = tempFormData.sub_kelas || '';
                     document.getElementById('deskripsi').value = tempFormData.deskripsi || '';
                     document.getElementById('habitat').value = tempFormData.habitat || '';
                     document.getElementById('peran_ekologis').value = tempFormData.peran_ekologis || '';
@@ -440,8 +440,8 @@
                     nama_umum: document.getElementById('nama_umum').value,
                     nama_latin: document.getElementById('nama_latin').value,
                     filum: document.getElementById('filum').value,
+                    sub_filum: document.getElementById('sub_filum').value, // Saving Sub Phylum
                     kelas: document.getElementById('kelas').value,
-                    sub_kelas: document.getElementById('sub_kelas').value,
                     deskripsi: document.getElementById('deskripsi').value,
                     habitat: document.getElementById('habitat').value,
                     peran_ekologis: document.getElementById('peran_ekologis').value,
@@ -513,7 +513,7 @@
                         viewButton.addEventListener('click', function () {
                             loadedMapLayers.clearLayers();
                             const selectedMapIndex = parseInt(this.closest('div[data-map-index]').dataset.mapIndex);
-                            const mapToDisplay = mapsToRender[selectedMapIndex]; // Fix here, it was selectedMapMapIndex
+                            const mapToDisplay = mapsToRender[selectedMapIndex];
 
                             L.geoJSON(mapToDisplay, {
                                 style: {
@@ -640,8 +640,8 @@
                 const nama_umum = document.getElementById('nama_umum').value;
                 const nama_latin = document.getElementById('nama_latin').value;
                 const filum = document.getElementById('filum').value;
+                const sub_filum = document.getElementById('sub_filum').value; // Get Sub Phylum value
                 const kelas = document.getElementById('kelas').value;
-                const sub_kelas = document.getElementById('sub_kelas').value;
                 const deskripsi = document.getElementById('deskripsi').value;
                 const habitat = document.getElementById('habitat').value;
                 const peran_ekologis = document.getElementById('peran_ekologis').value;
@@ -652,7 +652,7 @@
                 const tanggal_penelitian = document.getElementById('tanggal_penelitian').value;
 
                 // Validasi kolom wajib
-                if (!nama_umum || !nama_latin || !filum || !kelas || !sub_kelas || !deskripsi || !habitat || !peran_ekologis || !status_konservasi || !nama_peneliti || !lokasi_penelitian || !metode_penelitian || !tanggal_penelitian) {
+                if (!nama_umum || !nama_latin || !filum || !sub_filum || !kelas || !deskripsi || !habitat || !peran_ekologis || !status_konservasi || !nama_peneliti || !lokasi_penelitian || !metode_penelitian || !tanggal_penelitian) {
                     showNotification('Harap lengkapi semua kolom wajib (ditandai dengan *)', 'error');
                     return; // Hentikan proses jika ada kolom kosong
                 }
@@ -674,8 +674,8 @@
                     nama_umum,
                     nama_latin,
                     filum,
+                    sub_filum, // Save Sub Phylum
                     kelas,
-                    sub_kelas,
                     gambar: currentImages, // Simpan array gambar base64
                     deskripsi,
                     habitat,

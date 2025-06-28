@@ -170,18 +170,18 @@
             <h2 class="text-xl font-semibold text-gray-800 mb-6">Klasifikasi</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div>
-                    <label for="filum" class="block text-gray-700 text-sm font-medium mb-2">Filum</label>
+                    <label for="filum" class="block text-gray-700 text-sm font-medium mb-2">Phylum</label>
                     <input type="text" id="filum"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                </div>
+                <div>
+                    <label for="sub_filum" class="block text-gray-700 text-sm font-medium mb-2">Sub Phylum</label>
+                    <input type="text" id="sub_filum"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
                 </div>
                 <div>
                     <label for="kelas" class="block text-gray-700 text-sm font-medium mb-2">Kelas</label>
                     <input type="text" id="kelas"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
-                </div>
-                <div>
-                    <label for="sub_kelas" class="block text-gray-700 text-sm font-medium mb-2">Sub Kelas</label>
-                    <input type="text" id="sub_kelas"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
                 </div>
             </div>
@@ -284,8 +284,8 @@
             const namaUmumInput = document.getElementById('nama_umum');
             const namaLatinInput = document.getElementById('nama_latin');
             const filumInput = document.getElementById('filum');
+            const subFilumInput = document.getElementById('sub_filum'); // Added Sub Phylum input
             const kelasInput = document.getElementById('kelas');
-            const subKelasInput = document.getElementById('sub_kelas');
             const deskripsiTextarea = document.getElementById('deskripsi');
             const habitatTextarea = document.getElementById('habitat');
             const imagePreviewContainer = document.getElementById('imagePreviewContainer');
@@ -339,8 +339,8 @@
                 namaUmumInput.value = speciesData.nama_umum || 'N/A';
                 namaLatinInput.value = speciesData.nama_latin || 'N/A';
                 filumInput.value = speciesData.filum || 'N/A';
+                subFilumInput.value = speciesData.sub_filum || 'N/A'; // Populating Sub Phylum
                 kelasInput.value = speciesData.kelas || 'N/A';
-                subKelasInput.value = speciesData.sub_kelas || 'N/A';
                 deskripsiTextarea.value = speciesData.deskripsi || 'Tidak ada deskripsi.';
                 habitatTextarea.value = speciesData.habitat || 'Tidak ada informasi habitat.';
                 peranEkologisTextarea.value = speciesData.peran_ekologis || 'Tidak ada peran ekologis.';
