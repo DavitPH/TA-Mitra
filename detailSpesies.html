@@ -192,10 +192,20 @@
                 </div>
             </div>
 
-            <h2 class="text-xl font-semibold text-gray-800 mb-6">Deskripsi</h2>
-            <textarea id="deskripsi"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 mb-8 h-32"
-                readonly></textarea>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Deskripsi</h2>
+                    <textarea id="deskripsi"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 h-32"
+                        readonly></textarea>
+                </div>
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Habitat</h2>
+                    <textarea id="habitat"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 h-32"
+                        readonly></textarea>
+                </div>
+            </div>
 
             <h2 class="text-xl font-semibold text-gray-800 mb-6">Peta Persebaran</h2>
             <div id="mapListContainer" class="space-y-4 mb-8">
@@ -206,8 +216,9 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div>
                     <h2 class="text-xl font-semibold text-gray-800 mb-6">Peran Ekologis</h2>
-                    <input type="text" id="peran_ekologis"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly>
+                    <textarea id="peran_ekologis"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 h-32"
+                        readonly></textarea>
                 </div>
                 <div>
                     <h2 class="text-xl font-semibold text-gray-800 mb-6">Status Konservasi</h2>
@@ -272,12 +283,13 @@
             // Dapatkan elemen-elemen untuk mengisi data
             const namaUmumInput = document.getElementById('nama_umum');
             const namaLatinInput = document.getElementById('nama_latin');
-            const filumInput = document.getElementById('filum'); // Tambahan
-            const kelasInput = document.getElementById('kelas'); // Tambahan
-            const subKelasInput = document.getElementById('sub_kelas'); // Tambahan
+            const filumInput = document.getElementById('filum');
+            const kelasInput = document.getElementById('kelas');
+            const subKelasInput = document.getElementById('sub_kelas');
             const deskripsiTextarea = document.getElementById('deskripsi');
+            const habitatTextarea = document.getElementById('habitat');
             const imagePreviewContainer = document.getElementById('imagePreviewContainer');
-            const peranEkologisInput = document.getElementById('peran_ekologis');
+            const peranEkologisTextarea = document.getElementById('peran_ekologis');
             const statusKonservasiSelect = document.getElementById('status_konservasi');
             const namaPenelitiInput = document.getElementById('nama_peneliti');
             const lokasiPenelitianInput = document.getElementById('lokasi_penelitian');
@@ -301,7 +313,6 @@
 
             if (isNaN(speciesIndex)) {
                 console.error('Indeks spesies tidak valid di URL.');
-                // Opsional: tampilkan pesan error atau redirect ke daftar spesies
                 window.location.href = 'daftarSpesies.html';
                 return;
             }
@@ -310,7 +321,6 @@
             const allSpeciesRecordsString = sessionStorage.getItem('allSpeciesRecords');
             if (!allSpeciesRecordsString) {
                 console.error('Tidak ada data spesies di sessionStorage.');
-                // Opsional: tampilkan pesan error atau redirect ke daftar spesies
                 window.location.href = 'daftarSpesies.html';
                 return;
             }
@@ -321,7 +331,6 @@
 
                 if (!speciesData) {
                     console.error(`Spesies dengan indeks ${speciesIndex} tidak ditemukan.`);
-                    // Opsional: tampilkan pesan error atau redirect ke daftar spesies
                     window.location.href = 'daftarSpesies.html';
                     return;
                 }
@@ -329,21 +338,21 @@
                 // Isi elemen HTML dengan data spesies
                 namaUmumInput.value = speciesData.nama_umum || 'N/A';
                 namaLatinInput.value = speciesData.nama_latin || 'N/A';
-                filumInput.value = speciesData.filum || 'N/A'; // Isi klasifikasi
-                kelasInput.value = speciesData.kelas || 'N/A'; // Isi klasifikasi
-                subKelasInput.value = speciesData.sub_kelas || 'N/A'; // Isi klasifikasi
+                filumInput.value = speciesData.filum || 'N/A';
+                kelasInput.value = speciesData.kelas || 'N/A';
+                subKelasInput.value = speciesData.sub_kelas || 'N/A';
                 deskripsiTextarea.value = speciesData.deskripsi || 'Tidak ada deskripsi.';
-                peranEkologisInput.value = speciesData.peran_ekologis || 'N/A';
+                habitatTextarea.value = speciesData.habitat || 'Tidak ada informasi habitat.';
+                peranEkologisTextarea.value = speciesData.peran_ekologis || 'Tidak ada peran ekologis.';
                 statusKonservasiSelect.value = speciesData.status_konservasi || '';
                 namaPenelitiInput.value = speciesData.nama_peneliti || 'N/A';
                 lokasiPenelitianInput.value = speciesData.lokasi_penelitian || 'N/A';
                 metodePenelitianInput.value = speciesData.metode_penelitian || 'N/A';
                 tanggalPenelitianInput.value = speciesData.tanggal_penelitian || 'N/A';
 
-
                 // Tampilkan gambar (jika ada data gambar)
-                if (speciesData.gambar && speciesData.gambar.length > 0) { // Menggunakan speciesData.gambar
-                    imagePreviewContainer.innerHTML = ''; // Bersihkan kontainer terlebih dahulu
+                if (speciesData.gambar && speciesData.gambar.length > 0) {
+                    imagePreviewContainer.innerHTML = '';
                     speciesData.gambar.forEach((imgSrc, imgIndex) => {
                         const itemWrapper = document.createElement('div');
                         itemWrapper.className = 'flex flex-col items-center space-y-2';
@@ -358,7 +367,7 @@
 
                         const fileNameSpan = document.createElement('span');
                         fileNameSpan.className = 'text-gray-700 text-sm truncate w-32 text-center';
-                        fileNameSpan.textContent = `Gambar ${imgIndex + 1}`; // Ganti dengan nama file jika disimpan
+                        fileNameSpan.textContent = `Gambar ${imgIndex + 1}`;
 
                         thumbnailDiv.appendChild(img);
                         itemWrapper.appendChild(thumbnailDiv);
@@ -369,18 +378,15 @@
                     imagePreviewContainer.innerHTML = '<p class="text-gray-500">Tidak ada gambar yang tersedia.</p>';
                 }
 
-
                 // Render peta persebaran
                 const mapCollections = speciesData.peta_persebaran || [];
 
                 function renderMapsForDetailView(mapsToDisplay) {
-                    loadedMapLayers.clearLayers(); // Hapus layer yang ada
+                    loadedMapLayers.clearLayers();
                     let bounds = new L.LatLngBounds([]);
 
-                    // mapsToDisplay di sini diasumsikan sebagai array dari objek GeoJSON tunggal atau FeatureCollection.
-                    // Jika mapCollection itu sendiri adalah array fitur, L.geoJSON akan menanganinya.
                     mapsToDisplay.forEach(mapCollection => {
-                        if (mapCollection && Object.keys(mapCollection).length > 0) { // Pastikan bukan objek kosong
+                        if (mapCollection && Object.keys(mapCollection).length > 0) {
                             const layer = L.geoJSON(mapCollection, {
                                 style: {
                                     color: '#007bff',
@@ -400,16 +406,16 @@
                     } else {
                         detailMap.setView([3.4333, 117.6500], 8);
                     }
-                    detailMap.invalidateSize(); // Penting jika peta berada dalam tab tersembunyi
+                    detailMap.invalidateSize();
                 }
 
                 // Tampilkan daftar peta dan tombol "Lihat Semua Peta"
-                mapListContainer.innerHTML = ''; // Bersihkan kontainer daftar peta
+                mapListContainer.innerHTML = '';
 
                 if (mapCollections.length === 0) {
                     mapListContainer.innerHTML = '<p class="text-gray-500">Tidak ada peta persebaran yang tersedia.</p>';
                 } else {
-                    if (mapCollections.length > 1) { // Tampilkan "Lihat Semua" jika ada lebih dari 1 peta
+                    if (mapCollections.length > 1) {
                         const viewAllItem = document.createElement('div');
                         viewAllItem.className = 'flex items-center justify-between bg-green-100 text-green-800 p-4 rounded-lg border border-green-200 cursor-pointer hover:bg-green-200 transition-colors mb-2';
                         viewAllItem.innerHTML = `
@@ -436,8 +442,7 @@
                         if (viewSingleMapButton) {
                             viewSingleMapButton.addEventListener('click', function () {
                                 const selectedMapIndex = parseInt(this.dataset.index);
-                                // Pastikan mapCollections[selectedMapIndex] adalah objek GeoJSON tunggal atau FeatureCollection
-                                renderMapsForDetailView([mapCollections[selectedMapIndex]]); // Hanya tampilkan yang dipilih dalam array
+                                renderMapsForDetailView([mapCollections[selectedMapIndex]]);
                             });
                         }
                     });
@@ -445,9 +450,8 @@
 
                 // Set default tampilan peta ke peta pertama atau semua jika ada
                 if (mapCollections.length > 0) {
-                    renderMapsForDetailView(mapCollections); // Tampilkan semua peta secara default
+                    renderMapsForDetailView(mapCollections);
                 }
-
 
                 // Tangani perubahan ukuran peta
                 window.addEventListener('resize', function () {

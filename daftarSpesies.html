@@ -130,28 +130,17 @@
             }
         }
 
-        .toggle-status {
-            cursor: pointer;
-        }
-
-        /* New style for the "No." column to make it narrower */
         .table-col-no {
             width: 1%;
-            /* Make it as narrow as possible */
             white-space: nowrap;
-            /* Prevent wrapping */
             text-align: center;
-            /* Center the number */
             padding-left: 0.75rem;
-            /* px-3 */
             padding-right: 0.75rem;
-            /* px-3 */
         }
 
         /* Paginasi styles */
         .pagination-button {
             @apply flex items-center justify-center min-w-[36px] h-9 px-3 text-sm font-semibold cursor-pointer;
-            /* Hapus @apply border-t, border-b, border-l, border-r di sini */
             @apply bg-white text-gray-700 hover:bg-gray-100 transition-colors duration-200;
         }
 
@@ -168,9 +157,7 @@
         /* Styling untuk ellipsis (jika ada) */
         .pagination-ellipsis {
             @apply flex items-center justify-center min-w-[36px] h-9 px-3 text-gray-700 text-sm;
-            /* Tambahkan border jika ellipsis juga ingin terpisah */
             @apply border border-gray-300 rounded-lg;
-            /* Tambahkan ini jika Anda ingin ellipsis juga berbingkai */
         }
 
         /* Custom Orange for 'Tambah Data' button */
@@ -180,8 +167,26 @@
 
         .hover\:bg-orange-darker-custom:hover {
             background-color: #E06C00;
-            /* Sedikit lebih gelap untuk hover */
         }
+
+        /* Styling for the Status Publikasi text (just text) */
+        /* .toggle-status {
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            border: 1px solid transparent;
+        }
+
+        .bg-green-100.toggle-status:hover {
+            background-color: #d1fae5;
+            color: #10b981;
+            border-color: #10b981;
+        }
+
+        .bg-yellow-100.toggle-status:hover {
+            background-color: #fef3c7;
+            color: #d97706;
+            border-color: #d97706;
+        } */
     </style>
 </head>
 
@@ -270,7 +275,7 @@
                             </th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Filum
+                                Phylum
                             </th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -328,7 +333,7 @@
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="25">25</option>
-                        <option value="50">50</option>
+                        <option value="50">5</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                         <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -385,7 +390,6 @@
             let itemIndexToConfirm = null;
             let speciesDataForConfirmation = null;
 
-            // Element HTML yang diperbarui ID-nya
             const searchInput = document.getElementById('searchInput');
             const emptyTableMessage = document.getElementById('emptyTableMessage');
             const paginationInfoStart = document.getElementById('paginationInfoStart');
@@ -396,33 +400,31 @@
             const pageNumbersContainer = document.getElementById('pageNumbersContainer');
             const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
 
-            let allSpeciesData = []; // Ini akan menampung semua data spesies
-            let filteredSpeciesData = []; // Data setelah filter/pencarian
+            let allSpeciesData = [];
+            let filteredSpeciesData = [];
             let currentPage = 1;
-            let rowsPerPage; // Definisikan di sini, akan diinisialisasi setelah elements tersedia
+            let rowsPerPage;
 
-            // --- Fungsi Notifikasi ---
             function showNotification(message, type = 'success') {
                 notificationDiv.textContent = message;
-                notificationDiv.className = 'notification text-white font-semibold'; // Reset classes
+                notificationDiv.className = 'notification text-white font-semibold';
 
                 if (type === 'success') {
                     notificationDiv.classList.add('bg-green-500');
                 } else if (type === 'error') {
                     notificationDiv.classList.add('bg-red-500');
-                } else if (type === 'info') { // Added info type
+                } else if (type === 'info') {
                     notificationDiv.classList.add('bg-blue-500');
                 } else {
-                    notificationDiv.classList.add('bg-gray-500'); // Default
+                    notificationDiv.classList.add('bg-gray-500');
                 }
 
                 notificationDiv.style.display = 'block';
                 setTimeout(() => {
                     notificationDiv.style.display = 'none';
-                }, 3000); // Hide after 3 seconds
+                }, 3000);
             }
 
-            // Memuat dan menampilkan notifikasi dari sessionStorage (jika ada)
             const notificationMessage = sessionStorage.getItem('notificationMessage');
             const notificationType = sessionStorage.getItem('notificationType');
             if (notificationMessage && notificationType) {
@@ -431,7 +433,6 @@
                 sessionStorage.removeItem('notificationType');
             }
 
-            // --- Fungsi untuk Memuat Data dari Session Storage ---
             function loadSpeciesData() {
                 const storedData = sessionStorage.getItem('allSpeciesRecords');
                 if (storedData) {
@@ -447,16 +448,13 @@
                     allSpeciesData = [];
                     console.log('Tidak ada data spesies di sessionStorage.');
                 }
-                // Inisialisasi rowsPerPage di sini, setelah rowsPerPageSelect dipastikan ada
                 rowsPerPage = parseInt(rowsPerPageSelect.value);
-                applySearchAndFilter(); // Terapkan pencarian/filter setelah memuat data
+                applySearchAndFilter();
             }
 
-            // --- Fungsi untuk Menerapkan Pencarian dan Filter ---
             function applySearchAndFilter() {
                 const searchTerm = searchInput.value.toLowerCase();
 
-                // Filter berdasarkan nama umum, nama latin, filum, kelas, sub kelas
                 filteredSpeciesData = allSpeciesData.filter(species => {
                     return (
                         (species.nama_umum && species.nama_umum.toLowerCase().includes(searchTerm)) ||
@@ -466,24 +464,22 @@
                         (species.sub_kelas && species.sub_kelas.toLowerCase().includes(searchTerm))
                     );
                 });
-                currentPage = 1; // Reset ke halaman pertama setelah filter/pencarian
+                currentPage = 1;
                 renderTableAndPagination();
             }
 
-            // --- Fungsi untuk Merender Tabel dan Paginasi ---
             function renderTableAndPagination() {
-                speciesTableBody.innerHTML = ''; // Bersihkan tabel sebelumnya
+                speciesTableBody.innerHTML = '';
 
                 const totalRecords = filteredSpeciesData.length;
                 const totalPages = Math.ceil(totalRecords / rowsPerPage);
 
-                // Sesuaikan halaman saat ini jika berada di luar batas
                 if (currentPage > totalPages && totalPages > 0) {
                     currentPage = totalPages;
                 } else if (currentPage === 0 && totalPages > 0) {
                     currentPage = 1;
                 } else if (totalPages === 0) {
-                    currentPage = 0; // Tidak ada halaman jika tidak ada data
+                    currentPage = 0;
                 }
 
                 const startIndex = (currentPage - 1) * rowsPerPage;
@@ -492,23 +488,21 @@
 
                 if (speciesToDisplay.length === 0) {
                     emptyTableMessage.classList.remove('hidden');
-                    // Perbarui info entri jika tidak ada data
                     paginationInfoStart.textContent = 0;
                     paginationInfoEnd.textContent = 0;
                     paginationInfoTotal.textContent = 0;
-                    pageNumbersContainer.innerHTML = ''; // Kosongkan paginasi
+                    pageNumbersContainer.innerHTML = '';
                 } else {
                     emptyTableMessage.classList.add('hidden');
                     speciesToDisplay.forEach((species, i) => {
-                        // Gunakan indeks asli dari allSpeciesData untuk tindakan seperti edit/hapus
-                        // Ini penting karena filteredData bisa berubah urutan/jumlahnya
                         const originalIndex = allSpeciesData.indexOf(species);
 
                         const row = document.createElement('tr');
-                        row.className = i % 2 === 0 ? 'bg-white' : 'bg-gray-50'; // Alternating row colors
+                        row.className = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
                         row.innerHTML = `
                             <td class="px-3 py-4 text-sm text-gray-500 table-col-no">
-                                ${startIndex + i + 1} </td>
+                                ${startIndex + i + 1}
+                            </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
                                 ${species.nama_umum || '-'}
                             </td>
@@ -525,7 +519,7 @@
                                 ${species.sub_kelas || '-'}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${species.status_publikasi === 'Publish' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} toggle-status cursor-pointer" data-index="${originalIndex}">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${species.status_publikasi === 'Publish' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
                                     ${species.status_publikasi || 'Unpublish'}
                                 </span>
                             </td>
@@ -536,9 +530,13 @@
                                 <a href="editSpesies.html?editIndex=${originalIndex}" class="text-gray-500 hover:text-gray-700 mr-3 edit-btn" title="Edit Data">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button class="text-gray-500 hover:text-gray-700 delete-btn" data-index="${originalIndex}" title="Hapus Data">
+                                <button class="text-gray-500 hover:text-gray-700 mr-3 delete-btn" data-index="${originalIndex}" title="Hapus Data">
                                     <i class="fas fa-trash"></i>
                                 </button>
+                                ${species.status_publikasi === 'Publish' ?
+                                `<button class="px-3 py-1 bg-yellow-500 text-white rounded-md text-xs hover:bg-yellow-600 unpublish-btn" data-index="${originalIndex}" title="Ubah ke Unpublish">Unpublish</button>` :
+                                `<button class="px-3 py-1 bg-green-500 text-white rounded-md text-xs hover:bg-green-600 publish-btn" data-index="${originalIndex}" title="Ubah ke Publish">Publish</button>`
+                            }
                             </td>
                         `;
                         speciesTableBody.appendChild(row);
@@ -546,37 +544,31 @@
                 }
 
                 updatePaginationControls(totalPages, totalRecords, startIndex, endIndex);
-                attachEventListeners(); // Re-attach event listeners for new buttons
+                attachEventListeners();
             }
 
-            // --- Fungsi untuk Memperbarui Kontrol Paginasi ---
             function updatePaginationControls(totalPages, totalRecords, startIndex, endIndex) {
-                // Update pagination info text
                 paginationInfoStart.textContent = totalRecords === 0 ? 0 : startIndex + 1;
                 paginationInfoEnd.textContent = endIndex;
                 paginationInfoTotal.textContent = totalRecords;
 
-                // Clear previous page numbers
                 pageNumbersContainer.innerHTML = '';
 
-                // Add page number buttons
                 if (totalPages > 0) {
-                    let maxPageButtons = 5; // Maksimal 5 tombol halaman terlihat
+                    let maxPageButtons = 5;
                     let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
                     let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
 
-                    // Adjust if we are near the end
                     if (endPage - startPage + 1 < maxPageButtons) {
                         startPage = Math.max(1, endPage - maxPageButtons + 1);
                     }
 
-                    // Add "..." if needed at the beginning
                     if (startPage > 1) {
                         const firstPageButton = document.createElement('button');
                         firstPageButton.textContent = '1';
                         firstPageButton.classList.add(
                             'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
-                            'text-gray-900', 'bg-white', 'border-r', 'border-gray-200', // Border default 
+                            'text-gray-900', 'bg-white', 'border-r', 'border-gray-200',
                             'hover:bg-gray-100', 'hover:text-orange-700',
                             'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
                         );
@@ -590,7 +582,7 @@
                             ellipsisSpan.textContent = '...';
                             ellipsisSpan.classList.add(
                                 'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
-                                'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200' // Border di 3 sisi
+                                'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200'
                             );
                             pageNumbersContainer.appendChild(ellipsisSpan);
                         }
@@ -600,34 +592,20 @@
                         const pageButton = document.createElement('button');
                         pageButton.textContent = i;
 
-                        // Kelas dasar untuk tombol nomor halaman
                         pageButton.classList.add(
                             'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
-                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200', // Border top, bottom, left
+                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200',
                             'hover:bg-gray-100', 'hover:text-orange-700',
                             'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
                         );
 
-                        // Tambahkan rounded-l-lg jika ini tombol pertama dan tidak ada tombol "1" yang dibuat terpisah
-                        if (i === startPage && startPage === 1) {
-                            pageButton.classList.add('border-r');
-                        }
-                        // Atau jika ini adalah tombol pertama dalam rentang dinamis (startPage > 1)
-                        else if (i === startPage && startPage > 1) {
-                            // Ini akan menangani border-l jika ada ellipsis sebelumnya
-                        }
-
-
-                        // Jika ini adalah halaman aktif, tambahkan kelas gaya aktif yang Anda inginkan
                         if (i === currentPage) {
-                            // Hapus kelas non-aktif yang akan digantikan
                             pageButton.classList.remove(
                                 'text-gray-900', 'bg-white', 'border-gray-200', 'hover:bg-gray-100', 'hover:text-orange-700', 'focus:text-orange-700', 'focus:ring-orange-700'
                             );
-                            // Tambahkan kelas aktif
                             pageButton.classList.add(
                                 'text-white', 'bg-orange-500', 'border-orange-500', 'hover:bg-orange-600',
-                                'focus:text-white', 'focus:ring-white' // Ring focus putih agar tidak orange
+                                'focus:text-white', 'focus:ring-white'
                             );
                         }
 
@@ -638,7 +616,6 @@
                         pageNumbersContainer.appendChild(pageButton);
                     }
 
-                    // Add "..." if needed at the end
                     if (endPage < totalPages) {
                         if (endPage < totalPages - 1) {
                             const ellipsisSpan = document.createElement('span');
@@ -653,7 +630,7 @@
                         lastPageButton.textContent = totalPages;
                         lastPageButton.classList.add(
                             'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
-                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200', // Border top, bottom, left
+                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200',
                             'hover:bg-gray-100', 'hover:text-orange-700',
                             'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
                         );
@@ -664,41 +641,34 @@
                         pageNumbersContainer.appendChild(lastPageButton);
                     }
 
-                    // Tambahkan border-r dan rounded-r-lg ke tombol paling kanan di pageNumbersContainer
                     if (pageNumbersContainer.lastChild) {
                         pageNumbersContainer.lastChild.classList.add('border-r');
-                        // Tidak perlu menambahkan border-l lagi jika sudah ditambahkan di loop
-                        // pageNumbersContainer.lastChild.classList.add('border-l'); 
                     }
                 }
 
-                // Update Previous/Next button states
                 prevPageButton.classList.toggle('disabled', currentPage === 1 || totalPages === 0);
                 nextPageButton.classList.toggle('disabled', currentPage === totalPages || totalPages === 0);
             }
 
-            // --- Fungsi untuk Toggle Status Publikasi ---
             function togglePublicationStatus(index) {
                 if (index >= 0 && index < allSpeciesData.length) {
                     allSpeciesData[index].status_publikasi =
                         allSpeciesData[index].status_publikasi === 'Publish' ? 'Unpublish' : 'Publish';
                     sessionStorage.setItem('allSpeciesRecords', JSON.stringify(allSpeciesData));
                     showNotification(`Status publikasi diubah menjadi '${allSpeciesData[index].status_publikasi}'.`, 'success');
-                    applySearchAndFilter(); // Render ulang tabel untuk update tampilan
+                    applySearchAndFilter();
                 }
             }
 
-            // --- Fungsi untuk Menghapus Spesies ---
             function deleteSpecies(index) {
                 if (index >= 0 && index < allSpeciesData.length) {
-                    allSpeciesData.splice(index, 1); // Hapus dari array utama
+                    allSpeciesData.splice(index, 1);
                     sessionStorage.setItem('allSpeciesRecords', JSON.stringify(allSpeciesData));
                     showNotification('Data spesies berhasil dihapus.', 'success');
-                    applySearchAndFilter(); // Render ulang tabel setelah penghapusan
+                    applySearchAndFilter();
                 }
             }
 
-            // --- Fungsi untuk Menampilkan Peta di Modal ---
             function showMapInModal(speciesIndex) {
                 const species = allSpeciesData[speciesIndex];
                 if (!species || !species.peta_persebaran || species.peta_persebaran.length === 0) {
@@ -708,12 +678,10 @@
 
                 mapModal.style.display = 'flex';
 
-                // Inisialisasi peta jika belum ada
                 if (modalMapInstance) {
-                    modalMapInstance.remove(); // Hapus instance sebelumnya jika ada
+                    modalMapInstance.remove();
                 }
-                // Pastikan div modalMap sudah terlihat sebelum menginisialisasi peta
-                modalMapInstance = L.map('modalMap').setView([3.4333, 117.6500], 8); // Contoh koordinat awal
+                modalMapInstance = L.map('modalMap').setView([3.4333, 117.6500], 8);
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
@@ -724,11 +692,10 @@
                 let bounds = new L.LatLngBounds([]);
 
                 species.peta_persebaran.forEach(geoJsonItem => {
-                    // Pastikan geoJsonItem adalah objek GeoJSON yang valid
                     if (typeof geoJsonItem === 'object' && geoJsonItem !== null && geoJsonItem.type) {
                         const layer = L.geoJSON(geoJsonItem, {
                             style: {
-                                color: '#007bff', // Warna untuk peta persebaran
+                                color: '#007bff',
                                 weight: 3,
                                 fillColor: '#007bff',
                                 fillOpacity: 0.2
@@ -742,35 +709,27 @@
                     }
                 });
 
-                // Sesuaikan tampilan peta agar mencakup semua lapisan yang digambar
                 if (bounds.isValid()) {
                     modalMapInstance.fitBounds(bounds, { padding: [50, 50] });
                 } else {
-                    modalMapInstance.setView([3.4333, 117.6500], 8); // Default view if no valid bounds
+                    modalMapInstance.setView([3.4333, 117.6500], 8);
                 }
-                // Penting: invalidateSize setelah modal terlihat untuk memastikan peta di-render dengan benar
-                // Penundaan sedikit seringkali membantu browser untuk menghitung ulang layout
                 setTimeout(() => {
                     modalMapInstance.invalidateSize();
                 }, 100);
             }
 
-            // --- Attach Event Listeners ---
-            // Menggunakan event delegation pada speciesTableBody untuk tombol-tombol yang dinamis
             function attachEventListeners() {
-                // Hapus event listener lama untuk mencegah duplikasi (jika attachEventListeners dipanggil berulang)
-                // Ini penting agar setiap kali tabel di-render ulang, event listener tidak bertambah ganda
+                // Remove existing listeners to prevent duplicates
                 speciesTableBody.removeEventListener('click', handleTableButtonClick);
-                // Tambahkan event listener baru
+                // Add new listener
                 speciesTableBody.addEventListener('click', handleTableButtonClick);
             }
 
             function handleTableButtonClick(event) {
-                // Mencari elemen terdekat yang memiliki kelas .toggle-status, .delete-btn, atau .view-map-btn
-                const target = event.target.closest('.toggle-status, .delete-btn, .view-map-btn');
-                if (!target) return; // Jika tidak ada elemen yang cocok, keluar
+                const target = event.target.closest('.delete-btn, .publish-btn, .unpublish-btn, .view-detail-btn');
+                if (!target) return;
 
-                // Dapatkan indeks dari dataset tombol/span
                 const indexString = target.dataset.index;
                 const index = parseInt(indexString);
 
@@ -782,32 +741,39 @@
                 if (target.classList.contains('delete-btn')) {
                     actionToConfirm = 'delete';
                     itemIndexToConfirm = index;
-                    speciesDataForConfirmation = allSpeciesData[itemIndexToConfirm]; // Gunakan allSpeciesData
+                    speciesDataForConfirmation = allSpeciesData[itemIndexToConfirm];
 
                     confirmModalTitle.textContent = `Hapus Data No. ${itemIndexToConfirm + 1}?`;
                     confirmModalMessage.textContent = `Hapus data spesies "${speciesDataForConfirmation.nama_latin || speciesDataForConfirmation.nama_umum || '-'}"?`;
                     confirmActionButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                     confirmActionButton.classList.add('bg-red-600', 'hover:bg-red-700');
                     confirmModal.style.display = 'flex';
-                } else if (target.classList.contains('toggle-status')) {
+                } else if (target.classList.contains('publish-btn')) {
                     actionToConfirm = 'togglePublish';
                     itemIndexToConfirm = index;
-                    speciesDataForConfirmation = allSpeciesData[itemIndexToConfirm]; // Gunakan allSpeciesData
+                    speciesDataForConfirmation = allSpeciesData[itemIndexToConfirm];
 
-                    const currentStatus = speciesDataForConfirmation.status_publikasi;
-                    const newStatus = currentStatus === 'Publish' ? 'Unpublish' : 'Publish';
-
-                    confirmModalTitle.textContent = `${newStatus} Data No. ${itemIndexToConfirm + 1}?`;
-                    confirmModalMessage.textContent = `Ubah status publikasi "${speciesDataForConfirmation.nama_latin || speciesDataForConfirmation.nama_umum || '-'}" menjadi ${newStatus}?`;
+                    confirmModalTitle.textContent = `Publish Data No. ${itemIndexToConfirm + 1}?`;
+                    confirmModalMessage.textContent = `Ubah status publikasi "${speciesDataForConfirmation.nama_latin || speciesDataForConfirmation.nama_umum || '-'}" menjadi Publish?`;
                     confirmActionButton.classList.remove('bg-red-600', 'hover:bg-red-700');
                     confirmActionButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
                     confirmModal.style.display = 'flex';
-                } else if (target.classList.contains('view-map-btn')) {
-                    showMapInModal(index);
+                } else if (target.classList.contains('unpublish-btn')) {
+                    actionToConfirm = 'togglePublish';
+                    itemIndexToConfirm = index;
+                    speciesDataForConfirmation = allSpeciesData[itemIndexToConfirm];
+
+                    confirmModalTitle.textContent = `Unpublish Data No. ${itemIndexToConfirm + 1}?`;
+                    confirmModalMessage.textContent = `Ubah status publikasi "${speciesDataForConfirmation.nama_latin || speciesDataForConfirmation.nama_umum || '-'}" menjadi Unpublish?`;
+                    confirmActionButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+                    confirmActionButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    confirmModal.style.display = 'flex';
+                } else if (target.classList.contains('view-detail-btn')) {
+                    // This button already links to detailSpesies.html, so no modal logic needed here.
+                    // The 'href' attribute handles the navigation directly.
                 }
             }
 
-            // --- Event Listeners untuk Modal Konfirmasi ---
             confirmActionButton.onclick = function () {
                 if (itemIndexToConfirm !== null) {
                     if (actionToConfirm === 'delete') {
@@ -829,16 +795,14 @@
                 speciesDataForConfirmation = null;
             };
 
-            // --- Event Listeners untuk Modal Peta ---
             closeModalButton.onclick = function () {
                 mapModal.style.display = 'none';
                 if (modalMapInstance) {
-                    modalMapInstance.remove(); // Hapus instance peta
+                    modalMapInstance.remove();
                     modalMapInstance = null;
                 }
             };
 
-            // Close modal when clicking outside
             window.onclick = function (event) {
                 if (event.target === mapModal) {
                     mapModal.style.display = 'none';
@@ -854,7 +818,6 @@
                 }
             };
 
-            // --- Pagination Event Listeners ---
             prevPageButton.addEventListener('click', () => {
                 if (currentPage > 1) {
                     currentPage--;
@@ -872,15 +835,13 @@
 
             rowsPerPageSelect.addEventListener('change', (event) => {
                 rowsPerPage = parseInt(event.target.value);
-                currentPage = 1; // Reset ke halaman pertama
+                currentPage = 1;
                 renderTableAndPagination();
             });
 
-            // --- Search/Filter Event Listener ---
-            searchInput.addEventListener('input', applySearchAndFilter); // Use 'input' for real-time filtering
+            searchInput.addEventListener('input', applySearchAndFilter);
 
-            // --- Initial Load ---
-            loadSpeciesData(); // Muat data dan render tabel saat DOM siap
+            loadSpeciesData();
         });
     </script>
 </body>

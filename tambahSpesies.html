@@ -183,7 +183,8 @@
             <h2 class="text-xl font-semibold text-gray-800 mb-6">Klasifikasi</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div>
-                    <label for="filum" class="block text-gray-700 text-sm font-medium mb-2 required-label">Filum</label>
+                    <label for="filum"
+                        class="block text-gray-700 text-sm font-medium mb-2 required-label">Phylum</label>
                     <input type="text" id="filum"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                         placeholder="Filum" required>
@@ -202,7 +203,7 @@
                         placeholder="Sub Kelas" required>
                 </div>
             </div>
-            <h2 class="text-xl font-semibold text-gray-800 mb-6">Gambar</h2>
+            <h2 class="text-xl font-semibold text-gray-800 mb-6 required-label">Gambar</h2>
             <div class="flex flex-col space-y-4 mb-8">
                 <label for="imageUpload"
                     class="flex items-center space-x-3 bg-gray-100 p-4 rounded-lg border border-gray-300 w-full max-w-sm cursor-pointer hover:bg-gray-200 transition-colors">
@@ -215,10 +216,20 @@
                 </div>
             </div>
 
-            <h2 class="text-xl font-semibold text-gray-800 mb-6">Deskripsi</h2>
-            <textarea id="deskripsi"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all mb-8 h-32"
-                placeholder="Deskripsi"></textarea>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 required-label">Deskripsi</h2>
+                    <textarea id="deskripsi"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all h-32"
+                        placeholder="Deskripsi" required></textarea>
+                </div>
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 required-label">Habitat</h2>
+                    <textarea id="habitat"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all h-32"
+                        placeholder="Habitat" required></textarea>
+                </div>
+            </div>
 
             <h2 class="text-xl font-semibold text-gray-800 mb-6 required-label">Peta Persebaran</h2>
             <div class="flex flex-wrap gap-4 mb-4">
@@ -243,10 +254,10 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div>
-                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Peran Ekologis</h2>
-                    <input type="text" id="peran_ekologis"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                        placeholder="Peran Ekologis">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 required-label">Peran Ekologis</h2>
+                    <textarea id="peran_ekologis"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all h-32"
+                        placeholder="Peran Ekologis" required></textarea>
                 </div>
                 <div>
                     <h2 class="text-xl font-semibold text-gray-800 mb-6 required-label">Status Konservasi</h2>
@@ -373,6 +384,7 @@
                     document.getElementById('kelas').value = tempFormData.kelas || '';
                     document.getElementById('sub_kelas').value = tempFormData.sub_kelas || '';
                     document.getElementById('deskripsi').value = tempFormData.deskripsi || '';
+                    document.getElementById('habitat').value = tempFormData.habitat || '';
                     document.getElementById('peran_ekologis').value = tempFormData.peran_ekologis || '';
                     document.getElementById('status_konservasi').value = tempFormData.status_konservasi || '';
                     document.getElementById('nama_peneliti').value = tempFormData.nama_peneliti || '';
@@ -431,6 +443,7 @@
                     kelas: document.getElementById('kelas').value,
                     sub_kelas: document.getElementById('sub_kelas').value,
                     deskripsi: document.getElementById('deskripsi').value,
+                    habitat: document.getElementById('habitat').value,
                     peran_ekologis: document.getElementById('peran_ekologis').value,
                     status_konservasi: document.getElementById('status_konservasi').value,
                     nama_peneliti: document.getElementById('nama_peneliti').value,
@@ -551,8 +564,6 @@
                 miniMap.invalidateSize();
             });
 
-
-            // --- Image Upload Logic ---
             function renderImagePreviews() {
                 imagePreviewContainer.innerHTML = ''; // Bersihkan kontainer
                 currentImages.forEach((base64Image, index) => {
@@ -594,7 +605,6 @@
                 });
             }
 
-
             imageUploadInput.addEventListener('change', function (event) {
                 const files = event.target.files;
                 console.log(`Jumlah file yang dipilih: ${files.length}`);
@@ -624,7 +634,6 @@
                 }
             });
 
-            // --- Form Submission Logic ---
             saveButton.addEventListener('click', function (event) {
                 event.preventDefault(); // Mencegah submit form bawaan
 
@@ -634,6 +643,7 @@
                 const kelas = document.getElementById('kelas').value;
                 const sub_kelas = document.getElementById('sub_kelas').value;
                 const deskripsi = document.getElementById('deskripsi').value;
+                const habitat = document.getElementById('habitat').value;
                 const peran_ekologis = document.getElementById('peran_ekologis').value;
                 const status_konservasi = document.getElementById('status_konservasi').value;
                 const nama_peneliti = document.getElementById('nama_peneliti').value;
@@ -642,9 +652,14 @@
                 const tanggal_penelitian = document.getElementById('tanggal_penelitian').value;
 
                 // Validasi kolom wajib
-                if (!nama_umum || !nama_latin || !filum || !kelas || !sub_kelas || !status_konservasi || !nama_peneliti || !lokasi_penelitian || !metode_penelitian || !tanggal_penelitian) {
+                if (!nama_umum || !nama_latin || !filum || !kelas || !sub_kelas || !deskripsi || !habitat || !peran_ekologis || !status_konservasi || !nama_peneliti || !lokasi_penelitian || !metode_penelitian || !tanggal_penelitian) {
                     showNotification('Harap lengkapi semua kolom wajib (ditandai dengan *)', 'error');
                     return; // Hentikan proses jika ada kolom kosong
+                }
+
+                if (currentImages.length === 0) {
+                    showNotification('Harap unggah setidaknya satu Gambar.', 'error');
+                    return;
                 }
 
                 if (currentMapGeoJSON.length === 0) {
@@ -663,6 +678,7 @@
                     sub_kelas,
                     gambar: currentImages, // Simpan array gambar base64
                     deskripsi,
+                    habitat,
                     peta_persebaran,
                     peran_ekologis,
                     status_konservasi,
