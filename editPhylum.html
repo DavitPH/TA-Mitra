@@ -70,17 +70,45 @@
 
         #tempSubPhylumList {
             max-height: 10rem;
-            /* Disesuaikan untuk sub phylum */
             overflow-y: auto;
         }
 
+        /* Updated styling for list items to put actions on the right */
         #tempSubPhylumList li {
             @apply flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2;
         }
 
-        #tempSubPhylumList li .remove-subphylum-btn {
-            @apply text-red-500 hover:text-red-700 font-bold ml-4 cursor-pointer;
+        #tempSubPhylumList li .action-buttons button {
+            @apply text-gray-500 hover:text-gray-700 ml-2 cursor-pointer;
+            /* Removed font-bold */
         }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
 
         @media (max-width: 768px) {
             .fixed-sidebar {
@@ -204,6 +232,23 @@
         </section>
     </main>
 
+    <div id="confirmModal" class="modal">
+        <div class="modal-content max-w-sm">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800" id="confirmModalTitle"></h3>
+            <p class="text-gray-700 mb-6" id="confirmModalMessage"></p>
+            <div class="flex justify-end space-x-4">
+                <button id="cancelConfirmButton"
+                    class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors">
+                    Batal
+                </button>
+                <button id="confirmActionButton"
+                    class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors">
+                    Ya
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const editClassificationForm = document.getElementById('editClassificationForm');
@@ -215,10 +260,19 @@
             const notificationDiv = document.getElementById('notification');
             const cancelButton = document.getElementById('cancelButton');
 
+            const confirmModal = document.getElementById('confirmModal');
+            const confirmActionButton = document.getElementById('confirmActionButton');
+            const cancelConfirmButton = document.getElementById('cancelConfirmButton');
+            const confirmModalTitle = document.getElementById('confirmModalTitle');
+            const confirmModalMessage = document.getElementById('confirmModalMessage');
+
             let allClassificationRecords = [];
             let editIndex = -1;
-            // tempSubPhylumArray sekarang akan menyimpan objek { name: "...", kelas: [] }
             let tempSubPhylumArray = [];
+            let editingSubPhylumIndex = null; // New: To track which sub phylum is being edited
+
+            // Define a constant for the default sub-phylum name
+            const NO_SUBPHYLUM_NAME = "Tidak Ada Sub Phylum";
 
             function showNotification(message, type = 'success') {
                 notificationDiv.textContent = message;
@@ -247,19 +301,63 @@
                 } else {
                     emptySubPhylumListMessage.classList.add('hidden');
                     tempSubPhylumArray.forEach((subPhylumObj, index) => {
+                        // Display '-' if it's the NO_SUBPHYLUM_NAME dummy
+                        const displayName = (subPhylumObj.name === NO_SUBPHYLUM_NAME) ? '-' : subPhylumObj.name;
                         const listItem = document.createElement('li');
+                        // Use flexbox for the list item to align content and buttons
+                        listItem.className = 'flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2';
                         listItem.innerHTML = `
-                            <span>${subPhylumObj.name}</span>
-                            <button type="button" class="remove-subphylum-btn" data-index="${index}">&times;</button>
+                            <span>${displayName}</span>
+                            <div class="action-buttons flex items-center">
+                                ${subPhylumObj.name !== NO_SUBPHYLUM_NAME ?
+                                `<button type="button" class="edit-subphylum-btn text-gray-500 hover:text-blue-500 transition-colors ml-2" data-index="${index}" title="Edit Sub Phylum"><i class="fas fa-pencil-alt"></i></button>` : ''}
+                                <button type="button" class="delete-subphylum-btn text-gray-500 hover:text-red-500 transition-colors ml-2" data-index="${index}" title="Hapus Sub Phylum"><i class="fas fa-trash"></i></button>
+                            </div>
                         `;
                         tempSubPhylumList.appendChild(listItem);
                     });
                 }
-                tempSubPhylumList.querySelectorAll('.remove-subphylum-btn').forEach(button => {
+
+                // Add event listeners for edit and delete buttons
+                tempSubPhylumList.querySelectorAll('.edit-subphylum-btn').forEach(button => {
                     button.onclick = (event) => {
-                        const indexToRemove = parseInt(event.target.dataset.index);
-                        tempSubPhylumArray.splice(indexToRemove, 1);
-                        renderTempSubPhylumList();
+                        const indexToEdit = parseInt(event.target.closest('button').dataset.index);
+                        editingSubPhylumIndex = indexToEdit;
+                        subPhylumInput.value = tempSubPhylumArray[indexToEdit].name;
+                        addSubPhylumButton.textContent = 'Perbarui'; // Change button text
+                        showNotification('Mengedit Sub Phylum.', 'info');
+                    };
+                });
+
+                tempSubPhylumList.querySelectorAll('.delete-subphylum-btn').forEach(button => {
+                    button.onclick = (event) => {
+                        const indexToDelete = parseInt(event.target.closest('button').dataset.index);
+                        const subPhylumName = tempSubPhylumArray[indexToDelete].name;
+
+                        // Set up confirmation modal
+                        confirmModalTitle.textContent = 'Hapus Sub Phylum?';
+                        confirmModalMessage.innerHTML = `Anda yakin ingin menghapus Sub Phylum "<strong>${subPhylumName === NO_SUBPHYLUM_NAME ? '-' : subPhylumName}</strong>"?<br>Semua Kelas di bawah Sub Phylum ini juga akan dihapus.`;
+                        confirmActionButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                        confirmActionButton.classList.add('bg-red-600', 'hover:bg-red-700');
+                        confirmModal.style.display = 'flex';
+
+                        confirmActionButton.onclick = () => {
+                            if (subPhylumName === NO_SUBPHYLUM_NAME) {
+                                showNotification('Sub Phylum default tidak bisa dihapus, hanya bisa dikosongkan kelasnya.', 'error');
+                                confirmModal.style.display = 'none';
+                                return;
+                            }
+                            tempSubPhylumArray.splice(indexToDelete, 1);
+                            renderTempSubPhylumList();
+                            showNotification('Sub Phylum berhasil dihapus!', 'success');
+                            confirmModal.style.display = 'none';
+                            confirmActionButton.onclick = null; // Reset to prevent multiple calls
+                        };
+
+                        cancelConfirmButton.onclick = () => {
+                            confirmModal.style.display = 'none';
+                            confirmActionButton.onclick = null; // Reset to prevent multiple calls
+                        };
                     };
                 });
             }
@@ -267,10 +365,23 @@
             addSubPhylumButton.onclick = function () {
                 const newSubPhylumName = subPhylumInput.value.trim();
                 if (newSubPhylumName) {
-                    const isDuplicate = tempSubPhylumArray.some(item => item.name.toLowerCase() === newSubPhylumName.toLowerCase());
+                    const isDuplicate = tempSubPhylumArray.some((item, idx) =>
+                        item.name.toLowerCase() === newSubPhylumName.toLowerCase() && idx !== editingSubPhylumIndex
+                    );
+
                     if (!isDuplicate) {
-                        tempSubPhylumArray.push({ name: newSubPhylumName, kelas: [] }); // Simpan sebagai objek
-                        subPhylumInput.value = '';
+                        if (editingSubPhylumIndex !== null) {
+                            // Update existing sub phylum
+                            tempSubPhylumArray[editingSubPhylumIndex].name = newSubPhylumName;
+                            showNotification('Sub Phylum berhasil diperbarui!', 'success');
+                            editingSubPhylumIndex = null; // Reset editing state
+                            addSubPhylumButton.textContent = 'Tambah'; // Reset button text
+                        } else {
+                            // Add new sub phylum
+                            tempSubPhylumArray.push({ name: newSubPhylumName, kelas: [] });
+                            showNotification('Sub Phylum berhasil ditambahkan!', 'success');
+                        }
+                        subPhylumInput.value = ''; // Clear input after adding/updating
                         renderTempSubPhylumList();
                     } else {
                         showNotification('Sub Phylum ini sudah ada dalam daftar!', 'info');
@@ -287,23 +398,33 @@
                         allClassificationRecords = JSON.parse(storedData);
                         // Normalisasi data lama ke format baru jika diperlukan
                         allClassificationRecords.forEach(item => {
+                            // Normalisasi sub_phylum: memastikan setiap Phylum memiliki array sub_phylum
                             if (!Array.isArray(item.sub_phylum)) {
                                 item.sub_phylum = item.sub_phylum ? [{ name: item.sub_phylum, kelas: [] }] : [];
                             } else {
-                                // Pastikan setiap item di sub_phylum adalah objek { name: "...", kelas: [] }
                                 item.sub_phylum = item.sub_phylum.map(sp => {
                                     if (typeof sp === 'string') {
                                         return { name: sp, kelas: [] };
                                     }
+                                    if (!Array.isArray(sp.kelas)) {
+                                        sp.kelas = sp.kelas ? [sp.kelas] : [];
+                                    }
                                     return sp;
                                 });
                             }
-                            // Pastikan array kelas di dalam sub_phylum juga dinormalisasi
-                            item.sub_phylum.forEach(subPhylumObj => {
-                                if (!Array.isArray(subPhylumObj.kelas)) {
-                                    subPhylumObj.kelas = subPhylumObj.kelas ? [subPhylumObj.kelas] : [];
+
+                            // Migrasi kelas dari level root ke sub_phylum dummy jika ada dan sub_phylum kosong
+                            // atau jika kelas di root tapi tidak ada sub_phylum nyata yang cocok.
+                            if (item.kelas && Array.isArray(item.kelas) && item.kelas.length > 0) {
+                                // Cek apakah ada sub_phylum dummy
+                                let noSubPhylumEntry = item.sub_phylum.find(sp => sp.name === NO_SUBPHYLUM_NAME);
+                                if (!noSubPhylumEntry) {
+                                    noSubPhylumEntry = { name: NO_SUBPHYLUM_NAME, kelas: [] };
+                                    item.sub_phylum.push(noSubPhylumEntry); // Add at the end for edit view simplicity
                                 }
-                            });
+                                noSubPhylumEntry.kelas.push(...item.kelas);
+                                delete item.kelas; // Hapus properti kelas dari level root
+                            }
                         });
                     }
                     catch (e) {
@@ -331,7 +452,15 @@
 
                 // Populate tempSubPhylumArray from existing data
                 // Menggunakan JSON.parse(JSON.stringify()) untuk deep copy agar tidak merusak data asli saat edit
-                tempSubPhylumArray = JSON.parse(JSON.stringify(classificationToEdit.sub_phylum));
+                tempSubPhylumArray = JSON.parse(JSON.stringify(classificationToEdit.sub_phylum || []));
+
+                // Sort the tempSubPhylumArray so that the NO_SUBPHYLUM_NAME dummy is always at the end for UI consistency
+                tempSubPhylumArray.sort((a, b) => {
+                    if (a.name === NO_SUBPHYLUM_NAME) return 1;
+                    if (b.name === NO_SUBPHYLUM_NAME) return -1;
+                    return a.name.localeCompare(b.name);
+                });
+
                 renderTempSubPhylumList();
             }
 
@@ -347,8 +476,16 @@
 
                 if (editIndex !== -1) {
                     allClassificationRecords[editIndex].phylum = phylum;
-                    allClassificationRecords[editIndex].sub_phylum = tempSubPhylumArray; // Simpan array objek
-                    // 'kelas' di level utama dihapus atau diabaikan jika sudah di bawah sub_phylum
+                    // Filter out any empty 'kelas' arrays from sub_phylum objects if they are not the dummy
+                    allClassificationRecords[editIndex].sub_phylum = tempSubPhylumArray.filter(sp =>
+                        sp.name !== NO_SUBPHYLUM_NAME || sp.kelas.length > 0
+                    ); // Keep dummy only if it has classes
+
+                    // Remove the dummy if no classes are associated with it after filtering
+                    if (allClassificationRecords[editIndex].sub_phylum.some(sp => sp.name === NO_SUBPHYLUM_NAME && sp.kelas.length === 0)) {
+                        allClassificationRecords[editIndex].sub_phylum = allClassificationRecords[editIndex].sub_phylum.filter(sp => sp.name !== NO_SUBPHYLUM_NAME);
+                    }
+
 
                     sessionStorage.setItem('allClassificationRecords', JSON.stringify(allClassificationRecords));
 

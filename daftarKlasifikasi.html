@@ -180,9 +180,16 @@
             @apply flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2;
         }
 
-        #tempKelasList li .remove-kelas-btn {
-            @apply text-red-500 hover:text-red-700 font-bold ml-4 cursor-pointer;
+        #tempKelasList li .action-buttons button {
+            @apply text-gray-500 hover:text-blue-500 ml-2 cursor-pointer;
+            /* Default for edit */
         }
+
+        #tempKelasList li .action-buttons .remove-kelas-btn {
+            @apply text-gray-500 hover:text-red-500 ml-2 cursor-pointer;
+            /* Specific for delete */
+        }
+
 
         /* Gaya tambahan untuk sel tabel agar rapi */
         .table-cell-content {
@@ -191,6 +198,7 @@
             padding-top: 0.5rem;
             /* Sesuaikan padding agar konten tidak terlalu rapat */
             padding-bottom: 0.5rem;
+            /* Sesuaikan padding agar konten tidak terlalu rapat */
         }
 
         /* Gaya untuk setiap item di dalam sel tabel agar ada pemisah */
@@ -398,7 +406,7 @@
                             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                             placeholder="Masukkan nama Kelas (e.g., Hydrozoa)">
                     </div>
-                    <button type="button" id="addKelasButton"
+                    <button type="button" id="addOrUpdateKelasButton"
                         class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors h-fit">
                         Tambah
                     </button>
@@ -449,7 +457,7 @@
             const subPhylumSelect = document.getElementById('subPhylumSelect');
             const selectedSubPhylumName = document.getElementById('selectedSubPhylumName');
             const kelasInput = document.getElementById('kelasInput');
-            const addKelasButton = document.getElementById('addKelasButton');
+            const addOrUpdateKelasButton = document.getElementById('addOrUpdateKelasButton'); // Diperbarui
             const tempKelasList = document.getElementById('tempKelasList');
             const emptyKelasListMessage = document.getElementById('emptyKelasListMessage');
             const saveKelasButton = document.getElementById('saveKelasButton');
@@ -458,6 +466,7 @@
             let currentPhylumIndex = null; // Index of the main classification entry (Phylum)
             let currentSubPhylumIndex = null; // Index of the sub phylum being edited
             let tempKelasArray = []; // Array sementara untuk kelas yang sedang diedit di modal
+            let editingKelasIndex = null; // Menyimpan indeks kelas yang sedang diedit
 
             const searchInput = document.getElementById('searchInput');
             const emptyTableMessage = document.getElementById('emptyTableMessage');
@@ -477,7 +486,7 @@
             let rowsPerPage;
 
             // Define a constant for the default sub-phylum name when a phylum has no explicit sub-phylums
-            const NO_SUBPHYLUM_NAME = "Tidak Ada Sub Phylum"; // Changed from "(Tidak Ada Sub Phylum)" to remove parentheses
+            const NO_SUBPHYLUM_NAME = "Tidak Ada Sub Phylum"; //
 
             function showNotification(message, type = 'success') {
                 notificationDiv.textContent = message;
@@ -913,6 +922,11 @@
 
                     renderTempKelasList();
                     kelasInput.value = '';
+                    editingKelasIndex = null; // Reset status edit
+                    addOrUpdateKelasButton.textContent = 'Tambah'; // Reset tombol
+                    addOrUpdateKelasButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    addOrUpdateKelasButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+
                     kelasModalTitle.textContent = 'Edit Kelas';
                     kelasModal.style.display = 'flex';
 
@@ -941,6 +955,11 @@
                     tempKelasArray = [];
                 }
                 kelasInput.value = '';
+                editingKelasIndex = null; // Reset status edit saat Sub Phylum diganti
+                addOrUpdateKelasButton.textContent = 'Tambah'; // Reset tombol
+                addOrUpdateKelasButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                addOrUpdateKelasButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+
                 renderTempKelasList();
             });
 
@@ -979,26 +998,43 @@
                 currentPhylumIndex = null;
                 currentSubPhylumIndex = null;
                 tempKelasArray = [];
+                editingKelasIndex = null; // Reset status edit
                 subPhylumSelect.innerHTML = ''; // Clear options
                 selectedSubPhylumName.textContent = "";
+                addOrUpdateKelasButton.textContent = 'Tambah'; // Reset tombol
+                addOrUpdateKelasButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                addOrUpdateKelasButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
             }
 
 
-            addKelasButton.onclick = function () {
-                const newKelas = kelasInput.value.trim();
-                if (newKelas) {
+            addOrUpdateKelasButton.onclick = function () {
+                const newKelasName = kelasInput.value.trim();
+                if (newKelasName) {
                     if (currentPhylumIndex !== null && currentSubPhylumIndex !== null) {
                         const phylumEntry = allClassificationData[currentPhylumIndex];
                         if (phylumEntry && phylumEntry.sub_phylum[currentSubPhylumIndex]) {
-                            if (!tempKelasArray.includes(newKelas)) {
-                                tempKelasArray.push(newKelas);
-                                kelasInput.value = '';
-                                renderTempKelasList();
+                            // Cek duplikasi, kecuali jika sedang mengedit item itu sendiri
+                            const isDuplicate = tempKelasArray.some((item, idx) => item.toLowerCase() === newKelasName.toLowerCase() && idx !== editingKelasIndex);
+
+                            if (!isDuplicate) {
+                                if (editingKelasIndex !== null) {
+                                    // Mode edit
+                                    tempKelasArray[editingKelasIndex] = newKelasName;
+                                    editingKelasIndex = null; // Selesai mengedit
+                                    addOrUpdateKelasButton.textContent = 'Tambah'; // Kembali ke mode tambah
+                                    addOrUpdateKelasButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                                    addOrUpdateKelasButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                                } else {
+                                    // Mode tambah
+                                    tempKelasArray.push(newKelasName);
+                                }
+                                kelasInput.value = ''; // Kosongkan input
+                                renderTempKelasList(); // Perbarui daftar
                             } else {
                                 showNotification('Kelas ini sudah ada dalam daftar untuk Sub Phylum yang dipilih!', 'info');
                             }
                         } else {
-                            showNotification('Data Sub Phylum tidak ditemukan untuk penambahan kelas.', 'error');
+                            showNotification('Data Sub Phylum tidak ditemukan untuk penambahan/edit kelas.', 'error');
                         }
                     } else {
                         showNotification('Silakan pilih Phylum dan Sub Phylum terlebih dahulu!', 'error');
@@ -1017,18 +1053,44 @@
                     emptyKelasListMessage.classList.add('hidden');
                     tempKelasArray.forEach((kelas, index) => {
                         const listItem = document.createElement('li');
+                        listItem.className = 'flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2'; // Apply Tailwind classes
                         listItem.innerHTML = `
                             <span>${kelas}</span>
-                            <button type="button" class="remove-kelas-btn" data-index="${index}">&times;</button>
+                            <div class="action-buttons flex items-center">
+                                <button type="button" class="edit-temp-kelas-btn text-gray-500 hover:text-blue-500 transition-colors ml-2" data-index="${index}" title="Edit Kelas"><i class="fas fa-edit"></i></button>
+                                <button type="button" class="remove-kelas-btn text-gray-500 hover:text-red-500 transition-colors ml-2" data-index="${index}" title="Hapus Kelas"><i class="fas fa-trash"></i></button>
+                            </div>
                         `;
                         tempKelasList.appendChild(listItem);
                     });
                 }
                 tempKelasList.querySelectorAll('.remove-kelas-btn').forEach(button => {
                     button.onclick = (event) => {
-                        const indexToRemove = parseInt(event.target.dataset.index);
+                        const indexToRemove = parseInt(event.target.closest('button').dataset.index); // Use closest to get the button's data-index
                         tempKelasArray.splice(indexToRemove, 1);
                         renderTempKelasList();
+                        // Jika item yang sedang diedit dihapus, reset status edit
+                        if (editingKelasIndex === indexToRemove) {
+                            editingKelasIndex = null;
+                            kelasInput.value = '';
+                            addOrUpdateKelasButton.textContent = 'Tambah';
+                            addOrUpdateKelasButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                            addOrUpdateKelasButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                        } else if (editingKelasIndex > indexToRemove) {
+                            // Sesuaikan indeks edit jika item yang dihapus berada sebelum item yang sedang diedit
+                            editingKelasIndex--;
+                        }
+                    };
+                });
+
+                tempKelasList.querySelectorAll('.edit-temp-kelas-btn').forEach(button => {
+                    button.onclick = (event) => {
+                        editingKelasIndex = parseInt(event.target.closest('button').dataset.index);
+                        kelasInput.value = tempKelasArray[editingKelasIndex];
+                        addOrUpdateKelasButton.textContent = 'Perbarui';
+                        addOrUpdateKelasButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                        addOrUpdateKelasButton.classList.add('bg-green-600', 'hover:bg-green-700'); // Ganti warna untuk indikasi edit
+                        kelasInput.focus();
                     };
                 });
             }

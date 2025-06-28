@@ -70,16 +70,17 @@
 
         #tempSubPhylumList {
             max-height: 10rem;
-            /* Disesuaikan untuk sub phylum */
             overflow-y: auto;
         }
 
+        /* Updated styling for list items to put actions on the right */
         #tempSubPhylumList li {
             @apply flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2;
         }
 
-        #tempSubPhylumList li .remove-subphylum-btn {
-            @apply text-red-500 hover:text-red-700 font-bold ml-4 cursor-pointer;
+        #tempSubPhylumList li .action-buttons button {
+            @apply text-gray-500 hover:text-red-500 ml-2 cursor-pointer;
+            /* Only delete button here */
         }
 
         @media (max-width: 768px) {
@@ -247,25 +248,30 @@
             }
 
             function renderTempSubPhylumList() {
-                tempSubPhylumList.innerHTML = '';
+                tempSubPhylumList.innerHTML = ''; // Clear existing list
                 if (tempSubPhylumArray.length === 0) {
                     emptySubPhylumListMessage.classList.remove('hidden');
                 } else {
                     emptySubPhylumListMessage.classList.add('hidden');
                     tempSubPhylumArray.forEach((subPhylumObj, index) => {
                         const listItem = document.createElement('li');
+                        // Use flexbox for the list item to align content and buttons
+                        listItem.className = 'flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2';
                         listItem.innerHTML = `
                             <span>${subPhylumObj.name}</span>
-                            <button type="button" class="remove-subphylum-btn" data-index="${index}">&times;</button>
+                            <div class="action-buttons flex items-center">
+                                <button type="button" class="remove-subphylum-btn text-gray-500 hover:text-red-500 transition-colors ml-2" data-index="${index}" title="Hapus Sub Phylum"><i class="fas fa-trash"></i></button>
+                            </div>
                         `;
                         tempSubPhylumList.appendChild(listItem);
                     });
                 }
+                // Add event listener for remove buttons
                 tempSubPhylumList.querySelectorAll('.remove-subphylum-btn').forEach(button => {
                     button.onclick = (event) => {
-                        const indexToRemove = parseInt(event.target.dataset.index);
+                        const indexToRemove = parseInt(event.target.closest('button').dataset.index); // Use closest to get the button
                         tempSubPhylumArray.splice(indexToRemove, 1);
-                        renderTempSubPhylumList();
+                        renderTempSubPhylumList(); // Re-render the list
                     };
                 });
             }
@@ -274,9 +280,9 @@
                 const newSubPhylumName = subPhylumInput.value.trim();
                 if (newSubPhylumName) {
                     const isDuplicate = tempSubPhylumArray.some(item => item.name.toLowerCase() === newSubPhylumName.toLowerCase());
-                    if (!isDuplicate) {
-                        tempSubPhylumArray.push({ name: newSubPhylumName, kelas: [] }); // Simpan sebagai objek
-                        subPhylumInput.value = '';
+                    if (!isDuplicate) { // Only add if not empty and not already in list
+                        tempSubPhylumArray.push({ name: newSubPhylumName, kelas: [] }); // Store as an object
+                        subPhylumInput.value = ''; // Clear input after adding
                         renderTempSubPhylumList();
                     } else {
                         showNotification('Sub Phylum ini sudah ada dalam daftar!', 'info');
@@ -287,7 +293,7 @@
             };
 
             addClassificationForm.addEventListener('submit', function (event) {
-                event.preventDefault();
+                event.preventDefault(); // Mencegah pengiriman form default
 
                 const phylum = phylumInput.value.trim();
 
@@ -309,12 +315,7 @@
 
                 const newClassification = {
                     phylum: phylum,
-                    sub_phylum: tempSubPhylumArray, // Disimpan sebagai array objek
-                    // 'kelas' di level utama tidak lagi relevan jika kelas terkait dengan sub_phylum.
-                    // Untuk kompatibilitas mundur atau jika masih ada kelas umum phylum, bisa tetap ada.
-                    // Jika tidak, bisa dihapus atau diinisialisasi kosong.
-                    // Untuk contoh ini, saya akan menghapusnya karena kelas akan di bawah sub_phylum.
-                    // kelas: [] // Dihapus atau biarkan jika diperlukan untuk kelas "umum" phylum
+                    sub_phylum: tempSubPhylumArray, // Store as an array of objects
                 };
 
                 allClassificationRecords.push(newClassification);
@@ -329,7 +330,8 @@
                 window.location.href = 'daftarKlasifikasi.html';
             });
 
-            renderTempSubPhylumList(); // Initial render
+            // Initial render of empty sub phylum list
+            renderTempSubPhylumList();
         });
     </script>
 </body>
