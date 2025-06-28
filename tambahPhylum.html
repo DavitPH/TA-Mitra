@@ -68,6 +68,20 @@
             background-color: #E06C00;
         }
 
+        #tempSubPhylumList {
+            max-height: 10rem;
+            /* Disesuaikan untuk sub phylum */
+            overflow-y: auto;
+        }
+
+        #tempSubPhylumList li {
+            @apply flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2;
+        }
+
+        #tempSubPhylumList li .remove-subphylum-btn {
+            @apply text-red-500 hover:text-red-700 font-bold ml-4 cursor-pointer;
+        }
+
         @media (max-width: 768px) {
             .fixed-sidebar {
                 position: relative;
@@ -153,11 +167,27 @@
                 </div>
 
                 <div>
-                    <label for="subPhylum" class="block text-sm font-medium text-gray-700 mb-2">Sub Phylum
+                    <label for="subPhylumInput" class="block text-sm font-medium text-gray-700 mb-2">Sub Phylum
                         (Opsional)</label>
-                    <input type="text" id="subPhylum" name="subPhylum"
-                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        placeholder="Masukkan nama Sub Phylum (e.g., Chelicerata)">
+                    <div class="flex items-end space-x-2">
+                        <div class="flex-grow">
+                            <input type="text" id="subPhylumInput" name="subPhylumInput"
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                placeholder="Masukkan nama Sub Phylum (e.g., Chelicerata)">
+                        </div>
+                        <button type="button" id="addSubPhylumButton"
+                            class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors h-fit">
+                            Tambah
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="text-lg font-medium text-gray-700 mb-2">Daftar Sub Phylum:</h4>
+                        <ul id="tempSubPhylumList"
+                            class="border border-gray-200 rounded-md p-2 max-h-48 overflow-y-auto">
+                        </ul>
+                        <p id="emptySubPhylumListMessage" class="text-gray-500 text-sm mt-2 hidden">Belum ada Sub
+                            Phylum ditambahkan.</p>
+                    </div>
                 </div>
 
                 <div class="flex justify-end space-x-4">
@@ -178,9 +208,15 @@
         document.addEventListener('DOMContentLoaded', function () {
             const addClassificationForm = document.getElementById('addClassificationForm');
             const phylumInput = document.getElementById('phylum');
-            const subPhylumInput = document.getElementById('subPhylum');
+            const subPhylumInput = document.getElementById('subPhylumInput');
+            const addSubPhylumButton = document.getElementById('addSubPhylumButton');
+            const tempSubPhylumList = document.getElementById('tempSubPhylumList');
+            const emptySubPhylumListMessage = document.getElementById('emptySubPhylumListMessage');
             const notificationDiv = document.getElementById('notification');
             const cancelButton = document.getElementById('cancelButton');
+
+            // tempSubPhylumArray sekarang akan menyimpan objek { name: "...", kelas: [] }
+            let tempSubPhylumArray = [];
 
             function showNotification(message, type = 'success') {
                 notificationDiv.textContent = message;
@@ -210,25 +246,50 @@
                 sessionStorage.removeItem('notificationType');
             }
 
-            function loadClassificationData() {
-                const storedData = sessionStorage.getItem('allClassificationRecords');
-                if (storedData) {
-                    try {
-                        allClassificationRecords = JSON.parse(storedData);
-                    } catch (e) {
-                        console.error("Error parsing stored data:", e);
-                        showNotification('Gagal memuat data sebelumnya. Data baru akan disimpan.', 'error');
-                    }
+            function renderTempSubPhylumList() {
+                tempSubPhylumList.innerHTML = '';
+                if (tempSubPhylumArray.length === 0) {
+                    emptySubPhylumListMessage.classList.remove('hidden');
                 } else {
-                    allClassificationRecords = [];
+                    emptySubPhylumListMessage.classList.add('hidden');
+                    tempSubPhylumArray.forEach((subPhylumObj, index) => {
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `
+                            <span>${subPhylumObj.name}</span>
+                            <button type="button" class="remove-subphylum-btn" data-index="${index}">&times;</button>
+                        `;
+                        tempSubPhylumList.appendChild(listItem);
+                    });
                 }
+                tempSubPhylumList.querySelectorAll('.remove-subphylum-btn').forEach(button => {
+                    button.onclick = (event) => {
+                        const indexToRemove = parseInt(event.target.dataset.index);
+                        tempSubPhylumArray.splice(indexToRemove, 1);
+                        renderTempSubPhylumList();
+                    };
+                });
             }
 
+            addSubPhylumButton.onclick = function () {
+                const newSubPhylumName = subPhylumInput.value.trim();
+                if (newSubPhylumName) {
+                    const isDuplicate = tempSubPhylumArray.some(item => item.name.toLowerCase() === newSubPhylumName.toLowerCase());
+                    if (!isDuplicate) {
+                        tempSubPhylumArray.push({ name: newSubPhylumName, kelas: [] }); // Simpan sebagai objek
+                        subPhylumInput.value = '';
+                        renderTempSubPhylumList();
+                    } else {
+                        showNotification('Sub Phylum ini sudah ada dalam daftar!', 'info');
+                    }
+                } else {
+                    showNotification('Nama Sub Phylum tidak boleh kosong!', 'error');
+                }
+            };
+
             addClassificationForm.addEventListener('submit', function (event) {
-                event.preventDefault(); // Mencegah pengiriman form default
+                event.preventDefault();
 
                 const phylum = phylumInput.value.trim();
-                const subPhylum = subPhylumInput.value.trim();
 
                 if (!phylum) {
                     showNotification('Phylum wajib diisi!', 'error');
@@ -248,8 +309,12 @@
 
                 const newClassification = {
                     phylum: phylum,
-                    sub_phylum: subPhylum,
-                    kelas: []
+                    sub_phylum: tempSubPhylumArray, // Disimpan sebagai array objek
+                    // 'kelas' di level utama tidak lagi relevan jika kelas terkait dengan sub_phylum.
+                    // Untuk kompatibilitas mundur atau jika masih ada kelas umum phylum, bisa tetap ada.
+                    // Jika tidak, bisa dihapus atau diinisialisasi kosong.
+                    // Untuk contoh ini, saya akan menghapusnya karena kelas akan di bawah sub_phylum.
+                    // kelas: [] // Dihapus atau biarkan jika diperlukan untuk kelas "umum" phylum
                 };
 
                 allClassificationRecords.push(newClassification);
@@ -264,7 +329,7 @@
                 window.location.href = 'daftarKlasifikasi.html';
             });
 
-            loadClassificationData();
+            renderTempSubPhylumList(); // Initial render
         });
     </script>
 </body>

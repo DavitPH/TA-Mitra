@@ -321,7 +321,7 @@
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="25">25</option>
-                        <option value="50">5</option>
+                        <option value="50">50</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                         <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -393,6 +393,9 @@
             let currentPage = 1;
             let rowsPerPage;
 
+            // Define the string used for "no subphylum" in data
+            const NO_SUBPHYLUM_DATA_VALUE = "Tidak Ada Sub Phylum";
+
             function showNotification(message, type = 'success') {
                 notificationDiv.textContent = message;
                 notificationDiv.className = 'notification text-white font-semibold';
@@ -444,11 +447,14 @@
                 const searchTerm = searchInput.value.toLowerCase();
 
                 filteredSpeciesData = allSpeciesData.filter(species => {
+                    // Check if sub_filum is the NO_SUBPHYLUM_DATA_VALUE string and treat it as empty for search
+                    const subFilumForSearch = (species.sub_filum === NO_SUBPHYLUM_DATA_VALUE || species.sub_filum === null || species.sub_filum === "") ? "" : species.sub_filum;
+
                     return (
                         (species.nama_umum && species.nama_umum.toLowerCase().includes(searchTerm)) ||
                         (species.nama_latin && species.nama_latin.toLowerCase().includes(searchTerm)) ||
                         (species.filum && species.filum.toLowerCase().includes(searchTerm)) ||
-                        (species.sub_filum && species.sub_filum.toLowerCase().includes(searchTerm)) || // Filter by Sub Phylum
+                        (subFilumForSearch && subFilumForSearch.toLowerCase().includes(searchTerm)) || // Filter by adjusted Sub Phylum
                         (species.kelas && species.kelas.toLowerCase().includes(searchTerm))
                     );
                 });
@@ -487,6 +493,13 @@
 
                         const row = document.createElement('tr');
                         row.className = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+
+                        // Determine display value for Sub Phylum
+                        let displaySubFilum = species.sub_filum || '-'; // Default to '-' if null/undefined
+                        if (displaySubFilum === NO_SUBPHYLUM_DATA_VALUE) { // If it's the specific "No Sub Phylum" string
+                            displaySubFilum = '-'; // Show as '-'
+                        }
+
                         row.innerHTML = `
                             <td class="px-3 py-4 text-sm text-gray-500 table-col-no">
                                 ${startIndex + i + 1}
@@ -501,7 +514,7 @@
                                 ${species.filum || '-'}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                ${species.sub_filum || '-'}
+                                ${displaySubFilum}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 ${species.kelas || '-'}
