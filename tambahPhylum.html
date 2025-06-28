@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Phylum & Sub Phylum</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Set Poppins as the primary font for the entire body */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        .fixed-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 50;
+        }
+
+        .main-content-margin {
+            margin-left: 16rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            display: none;
+        }
+
+        /* Custom Orange for buttons */
+        .bg-orange-custom {
+            background-color: #F97A00;
+        }
+
+        .hover\:bg-orange-darker-custom:hover {
+            background-color: #E06C00;
+        }
+
+        @media (max-width: 768px) {
+            .fixed-sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-radius: 0;
+            }
+
+            .main-content-margin {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+
+    <aside class="w-64 bg-green-700 text-white flex flex-col p-4 rounded-r-lg shadow-lg fixed-sidebar">
+        <div class="flex items-center justify-center mb-10 mt-4">
+            <div class="w-20 h-20 flex items-center justify-center p-2">
+                <img src="logo.png" alt="Snail Logo" class="w-full h-full object-contain">
+            </div>
+        </div>
+        <nav class="flex-grow">
+            <ul>
+                <li class="mb-4">
+                    <a href="daftarSpesies.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-bug text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Invertebrata</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarKlasifikasi.html" class="flex items-center p-3 rounded-lg bg-green-800 shadow-md">
+                        <i class="fas fa-sitemap text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Klasifikasi</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarKomentar.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-comment-alt text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Komentar</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarAkun.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-users text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Akun Pengguna</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-green-600">
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                <i class="fas fa-sign-out-alt text-xl mr-3"></i>
+                <span class="font-medium text-lg">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 main-content-margin">
+        <nav class="mb-6 text-gray-600 text-lg">
+            <a href="daftarKlasifikasi.html" class="hover:underline">Daftar Klasifikasi</a>
+            <span class="mx-2 font-bold text-gray-800">&gt;</span>
+            <span class="font-semibold text-gray-800">Tambah Data</span>
+        </nav>
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Tambah Data Klasifikasi</h1>
+        </header>
+
+        <div id="notification" class="notification text-white font-semibold"></div>
+
+        <section class="bg-white p-8 rounded-xl shadow-md">
+            <form id="addClassificationForm" class="space-y-6">
+                <div>
+                    <label for="phylum" class="block text-sm font-medium text-gray-700 mb-2">Phylum <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" id="phylum" name="phylum" required
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                        placeholder="Masukkan nama Phylum (e.g., Arthropoda)">
+                </div>
+
+                <div>
+                    <label for="subPhylum" class="block text-sm font-medium text-gray-700 mb-2">Sub Phylum
+                        (Opsional)</label>
+                    <input type="text" id="subPhylum" name="subPhylum"
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                        placeholder="Masukkan nama Sub Phylum (e.g., Chelicerata)">
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelButton"
+                        class="px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="px-6 py-3 bg-orange-custom text-white font-semibold rounded-lg shadow-md hover:bg-orange-darker-custom transition-colors">
+                        Simpan Data
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const addClassificationForm = document.getElementById('addClassificationForm');
+            const phylumInput = document.getElementById('phylum');
+            const subPhylumInput = document.getElementById('subPhylum');
+            const notificationDiv = document.getElementById('notification');
+            const cancelButton = document.getElementById('cancelButton');
+
+            function showNotification(message, type = 'success') {
+                notificationDiv.textContent = message;
+                notificationDiv.className = 'notification text-white font-semibold';
+
+                if (type === 'success') {
+                    notificationDiv.classList.add('bg-green-500');
+                } else if (type === 'error') {
+                    notificationDiv.classList.add('bg-red-500');
+                } else if (type === 'info') {
+                    notificationDiv.classList.add('bg-blue-500');
+                } else {
+                    notificationDiv.classList.add('bg-gray-500');
+                }
+
+                notificationDiv.style.display = 'block';
+                setTimeout(() => {
+                    notificationDiv.style.display = 'none';
+                }, 3000);
+            }
+
+            const notificationMessage = sessionStorage.getItem('notificationMessage');
+            const notificationType = sessionStorage.getItem('notificationType');
+            if (notificationMessage && notificationType) {
+                showNotification(notificationMessage, notificationType);
+                sessionStorage.removeItem('notificationMessage');
+                sessionStorage.removeItem('notificationType');
+            }
+
+            function loadClassificationData() {
+                const storedData = sessionStorage.getItem('allClassificationRecords');
+                if (storedData) {
+                    try {
+                        allClassificationRecords = JSON.parse(storedData);
+                    } catch (e) {
+                        console.error("Error parsing stored data:", e);
+                        showNotification('Gagal memuat data sebelumnya. Data baru akan disimpan.', 'error');
+                    }
+                } else {
+                    allClassificationRecords = [];
+                }
+            }
+
+            addClassificationForm.addEventListener('submit', function (event) {
+                event.preventDefault(); // Mencegah pengiriman form default
+
+                const phylum = phylumInput.value.trim();
+                const subPhylum = subPhylumInput.value.trim();
+
+                if (!phylum) {
+                    showNotification('Phylum wajib diisi!', 'error');
+                    return;
+                }
+
+                let allClassificationRecords = [];
+                const storedData = sessionStorage.getItem('allClassificationRecords');
+                if (storedData) {
+                    try {
+                        allClassificationRecords = JSON.parse(storedData);
+                    } catch (e) {
+                        console.error("Error parsing stored data:", e);
+                        showNotification('Gagal memuat data sebelumnya. Data baru akan disimpan.', 'error');
+                    }
+                }
+
+                const newClassification = {
+                    phylum: phylum,
+                    sub_phylum: subPhylum,
+                    kelas: []
+                };
+
+                allClassificationRecords.push(newClassification);
+                sessionStorage.setItem('allClassificationRecords', JSON.stringify(allClassificationRecords));
+
+                sessionStorage.setItem('notificationMessage', 'Data klasifikasi berhasil ditambahkan!');
+                sessionStorage.setItem('notificationType', 'success');
+                window.location.href = 'daftarKlasifikasi.html';
+            });
+
+            cancelButton.addEventListener('click', function () {
+                window.location.href = 'daftarKlasifikasi.html';
+            });
+
+            loadClassificationData();
+        });
+    </script>
+</body>
+
+</html>

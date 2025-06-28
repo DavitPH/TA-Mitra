@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Klasifikasi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Fixed Sidebar Styling */
+        .fixed-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 50;
+        }
+
+        /* Adjust main content margin to prevent overlap with fixed sidebar */
+        .main-content-margin {
+            margin-left: 16rem;
+        }
+
+        /* Styling for modals */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Notification styling */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            display: none;
+            /* Hidden by default */
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .fixed-sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-radius: 0;
+            }
+
+            .main-content-margin {
+                margin-left: 0;
+            }
+
+            .flex-col.md\:flex-row {
+                flex-direction: column;
+            }
+        }
+
+        .table-col-no {
+            width: 1%;
+            white-space: nowrap;
+            text-align: center;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        /* Paginasi styles */
+        .pagination-button {
+            @apply flex items-center justify-center min-w-[36px] h-9 px-3 text-sm font-semibold cursor-pointer;
+            @apply bg-white text-gray-700 hover:bg-gray-100 transition-colors duration-200;
+        }
+
+        /* Tombol aktif */
+        .pagination-button.active {
+            @apply bg-[#F97A00] text-white border-[#F97A00] hover:bg-[#E06C00];
+        }
+
+        /* Tombol disabled */
+        .pagination-button.disabled {
+            @apply opacity-50 cursor-not-allowed bg-gray-100 text-gray-400;
+        }
+
+        /* Styling untuk ellipsis (jika ada) */
+        .pagination-ellipsis {
+            @apply flex items-center justify-center min-w-[36px] h-9 px-3 text-gray-700 text-sm;
+            @apply border border-gray-300 rounded-lg;
+        }
+
+        /* Custom Orange for 'Tambah Data' button */
+        .bg-orange-custom {
+            background-color: #F97A00;
+        }
+
+        .hover\:bg-orange-darker-custom:hover {
+            background-color: #E06C00;
+        }
+
+        /* Styles for the list of classes in the modal */
+        #tempKelasList {
+            max-height: 24rem;
+            /* Ditingkatkan untuk menampilkan lebih banyak item */
+            overflow-y: auto;
+        }
+
+        #tempKelasList li {
+            @apply flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2;
+        }
+
+        #tempKelasList li .remove-kelas-btn {
+            @apply text-red-500 hover:text-red-700 font-bold ml-4 cursor-pointer;
+        }
+
+        /* Gaya tambahan untuk sel tabel agar rapi */
+        .table-cell-content {
+            vertical-align: top;
+            /* Pastikan konten rata atas */
+            padding-top: 0.5rem;
+            /* Sesuaikan padding agar konten tidak terlalu rapat */
+            padding-bottom: 0.5rem;
+        }
+
+        /* Gaya untuk setiap item kelas di dalam sel tabel agar ada pemisah */
+        .kelas-item-wrapper div {
+            border-bottom: 1px solid #e2e8f0;
+            /* Border tipis di bawah setiap item kelas */
+            padding-bottom: 0.25rem;
+            /* Sedikit padding di bawah teks */
+            margin-bottom: 0.25rem;
+            /* Sedikit margin di bawah border */
+        }
+
+        .kelas-item-wrapper div:last-child {
+            border-bottom: none;
+            /* Hapus border bawah untuk item terakhir */
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+
+    <aside class="w-64 bg-green-700 text-white flex flex-col p-4 rounded-r-lg shadow-lg fixed-sidebar">
+        <div class="flex items-center justify-center mb-10 mt-4">
+            <div class="w-20 h-20 flex items-center justify-center p-2">
+                <img src="logo.png" alt="Snail Logo" class="w-full h-full object-contain">
+            </div>
+        </div>
+        <nav class="flex-grow">
+            <ul>
+                <li class="mb-4">
+                    <a href="daftarSpesies.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-bug text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Invertebrata</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarKlasifikasi.html" class="flex items-center p-3 rounded-lg bg-green-800 shadow-md">
+                        <i class="fas fa-sitemap text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Klasifikasi</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarKomentar.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-comment-alt text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Komentar</span>
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="daftarAkun.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-users text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Akun Pengguna</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-green-600">
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                <i class="fas fa-sign-out-alt text-xl mr-3"></i>
+                <span class="font-medium text-lg">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 main-content-margin">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Daftar Klasifikasi</h1>
+        </header>
+
+        <div id="notification" class="notification text-white font-semibold"></div>
+
+        <section class="flex flex-col md:flex-row items-center justify-between bg-white p-6 rounded-xl shadow-md mb-8">
+            <div class="relative flex-grow w-full md:w-auto mr-0 md:mr-4 mb-4 md:mb-0">
+                <input type="text" placeholder="Cari klasifikasi..." id="searchInput"
+                    class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
+                <button
+                    class="flex items-center justify-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors">
+                    <i class="fas fa-filter mr-2"></i>
+                    Filter
+                </button>
+                <a href="tambahPhylum.html"
+                    class="px-6 py-3 bg-orange-custom text-white font-semibold rounded-lg shadow-md hover:bg-orange-darker-custom transition-colors flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Tambah Data
+                </a>
+            </div>
+        </section>
+
+        <section class="bg-white p-8 rounded-xl shadow-md">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider table-col-no">
+                                No.
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Phylum
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Sub Phylum
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Kelas
+                            </th>
+                            <th scope="col"
+                                class="relative px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Aksi
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="classificationTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyTableMessage" class="text-center text-gray-500 py-4 hidden">
+                Tidak ada data klasifikasi yang ditemukan.
+            </div>
+        </section>
+
+        <div class="flex flex-col md:flex-row items-center justify-between mt-8">
+            <div class="mb-4 md:mb-0 text-gray-700">
+                Menampilkan <span id="paginationInfoStart">0</span> sampai <span id="paginationInfoEnd">0</span> dari
+                <span id="paginationInfoTotal">0</span> entri
+            </div>
+
+            <nav class="flex justify-end">
+                <div class="inline-flex rounded-md shadow-sm -space-x-px" role="group">
+                    <button type="button" id="prevPageButton"
+                        class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 hover:text-orange-700 focus:z-10 focus:ring-2 focus:ring-orange-700 focus:text-orange-700">
+                        Previous
+                    </button>
+                    <div id="pageNumbersContainer" class="inline-flex">
+                    </div>
+                    <button type="button" id="nextPageButton"
+                        class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-md hover:bg-gray-100 hover:text-orange-700 focus:z-10 focus:ring-2 focus:ring-orange-700 focus:text-orange-700">
+                        Next
+                    </button>
+                </div>
+            </nav>
+
+            <div class="flex items-center text-gray-700 mt-4 md:mt-0">
+                <span class="mr-2">Rows Per Page:</span>
+                <div class="relative inline-block text-left">
+                    <select id="rowsPerPageSelect"
+                        class="block appearance-none w-full bg-white border border-gray-300 hover:border-gray-400 px-4 py-2 pr-8 rounded-lg shadow leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal untuk konfirmasi hapus -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content max-w-sm">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800" id="confirmModalTitle"></h3>
+            <p class="text-gray-700 mb-6" id="confirmModalMessage"></p>
+            <div class="flex justify-end space-x-4">
+                <button id="cancelConfirmButton"
+                    class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors">
+                    Batal
+                </button>
+                <button id="confirmActionButton"
+                    class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors">
+                    Ya
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal untuk tambah/edit Kelas -->
+    <div id="kelasModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeKelasModalButton">&times;</span>
+            <h3 class="text-2xl font-semibold mb-4 text-gray-800" id="kelasModalTitle">Tambah Kelas</h3>
+            <div class="space-y-4">
+                <div class="flex items-end space-x-2">
+                    <div class="flex-grow">
+                        <label for="kelasInput" class="block text-sm font-medium text-gray-700 mb-2">Nama Kelas</label>
+                        <input type="text" id="kelasInput" name="kelasInput"
+                            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                            placeholder="Masukkan nama Kelas (e.g., Hydrozoa)">
+                    </div>
+                    <button type="button" id="addKelasButton"
+                        class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors h-fit">
+                        Tambah
+                    </button>
+                </div>
+                <div>
+                    <h4 class="text-lg font-medium text-gray-700 mb-2">Daftar Kelas:</h4>
+                    <ul id="tempKelasList" class="border border-gray-200 rounded-md p-2 max-h-48 overflow-y-auto">
+                        <!-- Kelas akan ditampilkan di sini -->
+                    </ul>
+                    <p id="emptyKelasListMessage" class="text-gray-500 text-sm mt-2 hidden">Belum ada kelas ditambahkan.
+                    </p>
+                </div>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" id="cancelKelasButton"
+                        class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors">
+                        Batal
+                    </button>
+                    <button type="button" id="saveKelasButton"
+                        class="px-4 py-2 bg-green-700 text-white font-semibold rounded-lg shadow-md hover:bg-green-800 transition-colors">
+                        Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const classificationTableBody = document.getElementById('classificationTableBody');
+            const notificationDiv = document.getElementById('notification');
+
+            const confirmModal = document.getElementById('confirmModal');
+            const confirmActionButton = document.getElementById('confirmActionButton');
+            const cancelConfirmButton = document.getElementById('cancelConfirmButton');
+            const confirmModalTitle = document.getElementById('confirmModalTitle');
+            const confirmModalMessage = document.getElementById('confirmModalMessage');
+            let actionToConfirm = null;
+            let itemIndexToConfirm = null;
+            let classificationDataForConfirmation = null;
+
+            // Elemen Modal Kelas
+            const kelasModal = document.getElementById('kelasModal');
+            const closeKelasModalButton = document.getElementById('closeKelasModalButton');
+            const kelasModalTitle = document.getElementById('kelasModalTitle');
+            const kelasInput = document.getElementById('kelasInput');
+            const addKelasButton = document.getElementById('addKelasButton'); // Tombol tambah kelas di modal
+            const tempKelasList = document.getElementById('tempKelasList'); // UL untuk daftar kelas sementara
+            const emptyKelasListMessage = document.getElementById('emptyKelasListMessage'); // Pesan jika kelas kosong
+            const saveKelasButton = document.getElementById('saveKelasButton');
+            const cancelKelasButton = document.getElementById('cancelKelasButton');
+            let currentKlasifikasiIndex = null; // Untuk menyimpan indeks data klasifikasi yang sedang di-edit (phylum, sub_phylum)
+            let tempKelasArray = []; // Array sementara untuk kelas yang sedang diedit di modal
+
+            const searchInput = document.getElementById('searchInput');
+            const emptyTableMessage = document.getElementById('emptyTableMessage');
+            const paginationInfoStart = document.getElementById('paginationInfoStart');
+            const paginationInfoEnd = document.getElementById('paginationInfoEnd');
+            const paginationInfoTotal = document.getElementById('paginationInfoTotal');
+            const prevPageButton = document.getElementById('prevPageButton');
+            const nextPageButton = document.getElementById('nextPageButton');
+            const pageNumbersContainer = document.getElementById('pageNumbersContainer');
+            const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
+
+            let allClassificationData = [];
+            let filteredClassificationData = [];
+            let visualRowsData = []; // Ini akan menampung semua baris visual yang akan dipaginasi
+
+            let currentPage = 1;
+            let rowsPerPage;
+
+            function showNotification(message, type = 'success') {
+                notificationDiv.textContent = message;
+                notificationDiv.className = 'notification text-white font-semibold';
+
+                if (type === 'success') {
+                    notificationDiv.classList.add('bg-green-500');
+                } else if (type === 'error') {
+                    notificationDiv.classList.add('bg-red-500');
+                } else if (type === 'info') {
+                    notificationDiv.classList.add('bg-blue-500');
+                } else {
+                    notificationDiv.classList.add('bg-gray-500');
+                }
+
+                notificationDiv.style.display = 'block';
+                setTimeout(() => {
+                    notificationDiv.style.display = 'none';
+                }, 3000);
+            }
+
+            const notificationMessage = sessionStorage.getItem('notificationMessage');
+            const notificationType = sessionStorage.getItem('notificationType');
+            if (notificationMessage && notificationType) {
+                showNotification(notificationMessage, notificationType);
+                sessionStorage.removeItem('notificationMessage');
+                sessionStorage.removeItem('notificationType');
+            }
+
+            function loadClassificationData() {
+                const storedData = sessionStorage.getItem('allClassificationRecords');
+                if (storedData) {
+                    try {
+                        allClassificationData = JSON.parse(storedData);
+                        // Pastikan properti 'kelas' adalah array, jika tidak, konversi
+                        allClassificationData.forEach(item => {
+                            if (!Array.isArray(item.kelas)) {
+                                item.kelas = item.kelas ? [item.kelas] : []; // Konversi string ke array atau array kosong
+                            }
+                        });
+                        console.log('Data klasifikasi berhasil dimuat dari sessionStorage:', allClassificationData);
+                    } catch (e) {
+                        console.error('Gagal mengurai data klasifikasi dari sessionStorage:', e);
+                        allClassificationData = [];
+                        showNotification('Data klasifikasi rusak, tidak dapat dimuat.', 'error');
+                    }
+                } else {
+                    allClassificationData = [];
+                    console.log('Tidak ada data klasifikasi di sessionStorage.');
+                }
+                rowsPerPage = parseInt(rowsPerPageSelect.value);
+                applySearchAndFilter();
+            }
+
+            function applySearchAndFilter() {
+                const searchTerm = searchInput.value.toLowerCase();
+
+                filteredClassificationData = allClassificationData.filter(classification => {
+                    return (
+                        (classification.phylum && classification.phylum.toLowerCase().includes(searchTerm)) ||
+                        (classification.sub_phylum && classification.sub_phylum.toLowerCase().includes(searchTerm)) ||
+                        (Array.isArray(classification.kelas) && classification.kelas.some(k => k.toLowerCase().includes(searchTerm))) ||
+                        (typeof classification.kelas === 'string' && classification.kelas.toLowerCase().includes(searchTerm)) // Untuk kasus string lama
+                    );
+                });
+
+                // Menetapkan nomor urut untuk setiap entri Phylum yang difilter
+                filteredClassificationData.forEach((classification, index) => {
+                    classification.displayNumber = index + 1; // Nomor urut unik untuk Phylum ini
+                });
+
+                // Membangun visualRowsData berdasarkan filteredClassificationData
+                visualRowsData = [];
+                filteredClassificationData.forEach((classification) => {
+                    // Pastikan kelas adalah array. Jika kosong, gunakan array dengan satu elemen '-'
+                    const kelasItems = Array.isArray(classification.kelas) && classification.kelas.length > 0 ? classification.kelas : ['-'];
+
+                    kelasItems.forEach((kelasItem, kelasIndex) => {
+                        visualRowsData.push({
+                            phylum: classification.phylum,
+                            sub_phylum: classification.sub_phylum,
+                            kelas: kelasItem,
+
+                            originalClassificationIndex: allClassificationData.indexOf(classification), // Index di allClassificationData (stabil)
+                            phylumDisplayNumber: classification.displayNumber, // Nomor unik untuk Phylum ini
+                            isFirstKelasRowForThisPhylum: kelasIndex === 0 // Flag untuk baris kelas pertama dari Phylum ini
+                        });
+                    });
+                });
+
+                currentPage = 1; // Reset ke halaman 1 setiap kali filter/cari berubah
+                renderTableAndPagination();
+            }
+
+            function renderTableAndPagination() {
+                classificationTableBody.innerHTML = '';
+
+                const totalVisualRecords = visualRowsData.length; // Total baris visual untuk paginasi
+                const totalPages = Math.ceil(totalVisualRecords / rowsPerPage);
+
+                if (currentPage > totalPages && totalPages > 0) {
+                    currentPage = totalPages;
+                } else if (currentPage === 0 && totalPages > 0) {
+                    currentPage = 1;
+                } else if (totalPages === 0) {
+                    currentPage = 0;
+                }
+
+                const visualStartIndex = (currentPage - 1) * rowsPerPage;
+                const visualEndIndex = Math.min(visualStartIndex + rowsPerPage, totalVisualRecords);
+                const rowsToDisplay = visualRowsData.slice(visualStartIndex, visualEndIndex);
+
+                if (rowsToDisplay.length === 0) {
+                    emptyTableMessage.classList.remove('hidden');
+                    paginationInfoStart.textContent = 0;
+                    paginationInfoEnd.textContent = 0;
+                    paginationInfoTotal.textContent = 0;
+                    pageNumbersContainer.innerHTML = '';
+                } else {
+                    emptyTableMessage.classList.add('hidden');
+
+                    let lastRenderedPhylumIndex = null; // Melacak index klasifikasi terakhir yang dirender di halaman ini
+
+                    rowsToDisplay.forEach((rowData, i) => {
+                        const row = document.createElement('tr');
+
+                        // Gunakan indeks klasifikasi asli untuk menentukan warna baris bergantian
+                        const originalClassification = allClassificationData[rowData.originalClassificationIndex];
+                        const originalFilteredIndex = filteredClassificationData.indexOf(originalClassification);
+                        row.className = originalFilteredIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+
+                        let rowContent = '';
+
+                        // Tentukan apakah ini baris pertama dari Phylum ini di tampilan halaman ini
+                        const isNewPhylumHeaderForThisPage = (rowData.originalClassificationIndex !== lastRenderedPhylumIndex);
+
+                        if (isNewPhylumHeaderForThisPage) {
+                            // Hitung berapa banyak baris Kelas dari Phylum ini yang akan dirender di SEGMEN halaman saat ini
+                            let actualRowspan = 0;
+                            for (let j = i; j < rowsToDisplay.length; j++) {
+                                if (rowsToDisplay[j].originalClassificationIndex === rowData.originalClassificationIndex) {
+                                    actualRowspan++;
+                                } else {
+                                    break;
+                                }
+                            }
+
+                            rowContent = `
+                                <td class="px-3 py-4 text-sm text-gray-500 table-col-no table-cell-content" rowspan="${actualRowspan}">
+                                    ${rowData.phylumDisplayNumber}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900 table-cell-content" rowspan="${actualRowspan}">
+                                    ${rowData.phylum || '-'}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500 table-cell-content" rowspan="${actualRowspan}">
+                                    ${rowData.sub_phylum || '-'}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500 table-cell-content">
+                                    <div class="kelas-item-wrapper"><div>${rowData.kelas}</div></div>
+                                </td>
+                                <td class="px-6 py-4 text-left text-sm font-medium table-cell-content" rowspan="${actualRowspan}">
+                                    <button class="text-gray-500 hover:text-gray-700 mr-3 edit-kelas-btn" data-index="${rowData.originalClassificationIndex}" title="${Array.isArray(allClassificationData[rowData.originalClassificationIndex].kelas) && allClassificationData[rowData.originalClassificationIndex].kelas.length > 0 ? 'Edit Kelas' : 'Tambah Kelas'}">
+                                        <i class="fas fa-layer-group"></i>
+                                    </button>
+                                    <a href="editPhylum.html?editIndex=${rowData.originalClassificationIndex}" class="text-gray-500 hover:text-gray-700 mr-3 edit-phylum-btn" title="Edit Phylum/Sub Phylum">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="text-gray-500 hover:text-gray-700 delete-btn" data-index="${rowData.originalClassificationIndex}" title="Hapus Data">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            lastRenderedPhylumIndex = rowData.originalClassificationIndex; // Update tracker
+                        } else {
+                            // Ini adalah baris Kelas tambahan dari Phylum yang headernya sudah dirender di segmen halaman ini
+                            rowContent = `
+                                <td class="px-6 py-4 text-sm text-gray-500 table-cell-content">
+                                    <div class="kelas-item-wrapper"><div>${rowData.kelas}</div></div>
+                                </td>
+                            `;
+                        }
+                        row.innerHTML = rowContent;
+                        classificationTableBody.appendChild(row);
+                    });
+                }
+
+                // Update info paginasi berdasarkan visualRowsData
+                paginationInfoStart.textContent = totalVisualRecords === 0 ? 0 : visualStartIndex + 1;
+                paginationInfoEnd.textContent = visualEndIndex;
+                paginationInfoTotal.textContent = totalVisualRecords;
+
+                updatePaginationControls(totalPages, totalVisualRecords, visualStartIndex, visualEndIndex);
+                attachEventListeners();
+            }
+
+            function updatePaginationControls(totalPages, totalRecords, startIndex, endIndex) {
+                pageNumbersContainer.innerHTML = '';
+
+                if (totalPages > 0) {
+                    let maxPageButtons = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+                    let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+                    if (endPage - startPage + 1 < maxPageButtons) {
+                        startPage = Math.max(1, endPage - maxPageButtons + 1);
+                    }
+
+                    if (startPage > 1) {
+                        const firstPageButton = document.createElement('button');
+                        firstPageButton.textContent = '1';
+                        firstPageButton.classList.add(
+                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                            'text-gray-900', 'bg-white', 'border-r', 'border-gray-200',
+                            'hover:bg-gray-100', 'hover:text-orange-700',
+                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
+                        );
+                        firstPageButton.addEventListener('click', () => {
+                            currentPage = 1;
+                            renderTableAndPagination();
+                        });
+                        pageNumbersContainer.appendChild(firstPageButton);
+                        if (startPage > 2) {
+                            const ellipsisSpan = document.createElement('span');
+                            ellipsisSpan.textContent = '...';
+                            ellipsisSpan.classList.add(
+                                'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                                'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200'
+                            );
+                            pageNumbersContainer.appendChild(ellipsisSpan);
+                        }
+                    }
+
+                    for (let i = startPage; i <= endPage; i++) {
+                        const pageButton = document.createElement('button');
+                        pageButton.textContent = i;
+
+                        pageButton.classList.add(
+                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200',
+                            'hover:bg-gray-100', 'hover:text-orange-700',
+                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
+                        );
+
+                        if (i === currentPage) {
+                            pageButton.classList.remove(
+                                'text-gray-900', 'bg-white', 'border-gray-200', 'hover:bg-gray-100', 'hover:text-orange-700', 'focus:text-orange-700', 'focus:ring-orange-700'
+                            );
+                            pageButton.classList.add(
+                                'text-white', 'bg-orange-500', 'border-orange-500', 'hover:bg-orange-600',
+                                'focus:text-white', 'focus:ring-white'
+                            );
+                        }
+
+                        pageButton.addEventListener('click', () => {
+                            currentPage = i;
+                            renderTableAndPagination();
+                        });
+                        pageNumbersContainer.appendChild(pageButton);
+                    }
+
+                    if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) {
+                            const ellipsisSpan = document.createElement('span');
+                            ellipsisSpan.textContent = '...';
+                            ellipsisSpan.classList.add(
+                                'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                                'text-gray-700', 'border-t', 'border-b', 'border-l', 'border-gray-200'
+                            );
+                            pageNumbersContainer.appendChild(ellipsisSpan);
+                        }
+                        const lastPageButton = document.createElement('button');
+                        lastPageButton.textContent = totalPages;
+                        lastPageButton.classList.add(
+                            'px-4', 'py-2', 'text-sm', 'font-medium', 'h-9', 'flex', 'items-center', 'justify-center',
+                            'text-gray-900', 'bg-white', 'border-t', 'border-b', 'border-l', 'border-gray-200',
+                            'hover:bg-gray-100', 'hover:text-orange-700',
+                            'focus:z-10', 'focus:ring-2', 'focus:ring-orange-700', 'focus:text-orange-700'
+                        );
+                        lastPageButton.addEventListener('click', () => {
+                            currentPage = totalPages;
+                            renderTableAndPagination();
+                        });
+                        pageNumbersContainer.appendChild(lastPageButton);
+                    }
+
+                    if (pageNumbersContainer.lastChild) {
+                        pageNumbersContainer.lastChild.classList.add('border-r');
+                    }
+                }
+
+                prevPageButton.classList.toggle('disabled', currentPage === 1 || totalPages === 0);
+                nextPageButton.classList.toggle('disabled', currentPage === totalPages || totalPages === 0);
+            }
+
+            function deleteClassification(index) {
+                if (index >= 0 && index < allClassificationData.length) {
+                    allClassificationData.splice(index, 1);
+                    sessionStorage.setItem('allClassificationRecords', JSON.stringify(allClassificationData));
+                    showNotification('Data klasifikasi berhasil dihapus.', 'success');
+                    applySearchAndFilter();
+                }
+            }
+
+            function attachEventListeners() {
+                // Remove existing listeners to prevent duplicates
+                classificationTableBody.removeEventListener('click', handleTableButtonClick);
+                // Add new listener
+                classificationTableBody.addEventListener('click', handleTableButtonClick);
+            }
+
+            function handleTableButtonClick(event) {
+                const target = event.target.closest('.delete-btn, .edit-kelas-btn, .edit-phylum-btn');
+                if (!target) return;
+
+                const indexString = target.dataset.index;
+                const index = parseInt(indexString);
+
+                if (isNaN(index)) {
+                    console.error('Invalid index found:', indexString);
+                    return;
+                }
+
+                if (target.classList.contains('delete-btn')) {
+                    actionToConfirm = 'delete';
+                    itemIndexToConfirm = index;
+                    classificationDataForConfirmation = allClassificationData[itemIndexToConfirm];
+
+                    confirmModalTitle.textContent = `Hapus Data No. ${itemIndexToConfirm + 1}?`;
+                    confirmModalMessage.textContent = `Hapus data klasifikasi "${classificationDataForConfirmation.phylum || '-'}"?`;
+                    confirmActionButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    confirmActionButton.classList.add('bg-red-600', 'hover:bg-red-700');
+                    confirmModal.style.display = 'flex';
+                } else if (target.classList.contains('edit-kelas-btn')) {
+                    currentKlasifikasiIndex = index;
+                    // Pastikan kelas adalah array, atau inisialisasi sebagai array kosong
+                    tempKelasArray = Array.isArray(allClassificationData[index].kelas) ? [...allClassificationData[index].kelas] : [];
+                    kelasInput.value = ''; // Kosongkan input field saat membuka modal
+                    kelasModalTitle.textContent = 'Edit Kelas'; // Judul modal selalu "Edit Kelas"
+                    renderTempKelasList(); // Render daftar kelas di dalam modal
+                    kelasModal.style.display = 'flex';
+                } else if (target.classList.contains('edit-phylum-btn')) {
+                    // Redirect ke editPhylum.html dengan indeks yang sesuai
+                    window.location.href = `editPhylum.html?editIndex=${index}`;
+                }
+            }
+
+            confirmActionButton.onclick = function () {
+                if (itemIndexToConfirm !== null) {
+                    if (actionToConfirm === 'delete') {
+                        deleteClassification(itemIndexToConfirm);
+                    }
+                    confirmModal.style.display = 'none';
+                    actionToConfirm = null;
+                    itemIndexToConfirm = null;
+                    classificationDataForConfirmation = null;
+                }
+            };
+
+            cancelConfirmButton.onclick = function () {
+                confirmModal.style.display = 'none';
+                actionToConfirm = null;
+                itemIndexToConfirm = null;
+                classificationDataForConfirmation = null;
+            };
+
+            // Event listener untuk modal Kelas
+            closeKelasModalButton.onclick = function () {
+                kelasModal.style.display = 'none';
+                kelasInput.value = ''; // Bersihkan input saat modal ditutup
+                currentKlasifikasiIndex = null;
+                tempKelasArray = []; // Bersihkan array sementara
+            };
+
+            cancelKelasButton.onclick = function () {
+                kelasModal.style.display = 'none';
+                kelasInput.value = ''; // Bersihkan input saat modal ditutup
+                currentKlasifikasiIndex = null;
+                tempKelasArray = []; // Bersihkan array sementara
+            };
+
+            addKelasButton.onclick = function () {
+                const newKelas = kelasInput.value.trim();
+                if (newKelas && !tempKelasArray.includes(newKelas)) { // Hanya tambahkan jika tidak kosong dan belum ada
+                    tempKelasArray.push(newKelas);
+                    kelasInput.value = ''; // Bersihkan input setelah ditambahkan
+                    renderTempKelasList();
+                } else if (newKelas && tempKelasArray.includes(newKelas)) {
+                    showNotification('Kelas ini sudah ada dalam daftar!', 'info');
+                } else {
+                    showNotification('Nama kelas tidak boleh kosong!', 'error');
+                }
+            };
+
+            function renderTempKelasList() {
+                tempKelasList.innerHTML = ''; // Kosongkan daftar yang sudah ada
+                if (tempKelasArray.length === 0) {
+                    emptyKelasListMessage.classList.remove('hidden');
+                } else {
+                    emptyKelasListMessage.classList.add('hidden');
+                    tempKelasArray.forEach((kelas, index) => {
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `
+                            <span>${kelas}</span>
+                            <button type="button" class="remove-kelas-btn" data-index="${index}">&times;</button>
+                        `;
+                        tempKelasList.appendChild(listItem);
+                    });
+                }
+                // Tambahkan event listener untuk tombol hapus di setiap item daftar
+                tempKelasList.querySelectorAll('.remove-kelas-btn').forEach(button => {
+                    button.onclick = (event) => {
+                        const indexToRemove = parseInt(event.target.dataset.index);
+                        tempKelasArray.splice(indexToRemove, 1);
+                        renderTempKelasList(); // Render ulang daftar
+                    };
+                });
+            }
+
+            saveKelasButton.onclick = function () {
+                if (currentKlasifikasiIndex !== null) {
+                    allClassificationData[currentKlasifikasiIndex].kelas = [...tempKelasArray]; // Simpan salinan array
+                    sessionStorage.setItem('allClassificationRecords', JSON.stringify(allClassificationData));
+                    showNotification('Kelas berhasil diperbarui!', 'success');
+                    applySearchAndFilter(); // Refresh tabel utama
+                    kelasModal.style.display = 'none';
+                    kelasInput.value = '';
+                    currentKlasifikasiIndex = null;
+                    tempKelasArray = [];
+                }
+            };
+
+            // Klik di luar modal untuk menutup
+            window.onclick = function (event) {
+                if (event.target === confirmModal) {
+                    confirmModal.style.display = 'none';
+                    actionToConfirm = null;
+                    itemIndexToConfirm = null;
+                    classificationDataForConfirmation = null;
+                } else if (event.target === kelasModal) {
+                    kelasModal.style.display = 'none';
+                    kelasInput.value = '';
+                    currentKlasifikasiIndex = null;
+                    tempKelasArray = [];
+                }
+            };
+
+            prevPageButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTableAndPagination();
+                }
+            });
+
+            nextPageButton.addEventListener('click', () => {
+                const totalPages = Math.ceil(visualRowsData.length / rowsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTableAndPagination();
+                }
+            });
+
+            rowsPerPageSelect.addEventListener('change', (event) => {
+                rowsPerPage = parseInt(event.target.value);
+                currentPage = 1;
+                renderTableAndPagination();
+            });
+
+            searchInput.addEventListener('input', applySearchAndFilter);
+
+            loadClassificationData();
+        });
+    </script>
+</body>
+
+</html>
