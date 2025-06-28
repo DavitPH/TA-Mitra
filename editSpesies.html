@@ -119,6 +119,13 @@
                     </a>
                 </li>
                 <li class="mb-4">
+                    <a href="daftarKlasifikasi.html"
+                        class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-sitemap text-xl mr-3"></i>
+                        <span class="font-medium text-lg">Klasifikasi</span>
+                    </a>
+                </li>
+                <li class="mb-4">
                     <a href="daftarKomentar.html"
                         class="flex items-center p-3 rounded-lg hover:bg-green-600 transition-colors">
                         <i class="fas fa-comment-alt text-xl mr-3"></i>
@@ -176,21 +183,24 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div>
                     <label for="filum" class="block text-gray-700 text-sm font-medium mb-2">Phylum</label>
-                    <input type="text" id="filum"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                        placeholder="Phylum">
+                    <select id="filum"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
+                        <option value="">Pilih Phylum</option>
+                    </select>
                 </div>
                 <div>
                     <label for="sub_filum" class="block text-gray-700 text-sm font-medium mb-2">Sub Phylum</label>
-                    <input type="text" id="sub_filum"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                        placeholder="Sub Phylum">
+                    <select id="sub_filum"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
+                        <option value="">Pilih Sub Phylum</option>
+                    </select>
                 </div>
                 <div>
                     <label for="kelas" class="block text-gray-700 text-sm font-medium mb-2">Kelas</label>
-                    <input type="text" id="kelas"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                        placeholder="Kelas">
+                    <select id="kelas"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
+                        <option value="">Pilih Kelas</option>
+                    </select>
                 </div>
             </div>
             <h2 class="text-xl font-semibold text-gray-800 mb-6">Gambar</h2>
@@ -324,10 +334,16 @@
             const imagePreviewContainer = document.getElementById('imagePreviewContainer');
             const notificationDiv = document.getElementById('notification');
 
+            // Select elements for classification dropdowns
+            const filumSelect = document.getElementById('filum');
+            const subFilumSelect = document.getElementById('sub_filum');
+            const kelasSelect = document.getElementById('kelas');
+
             let imageCounter = 0;
             let currentImages = [];
             let editIndex = null;
             let currentMapGeoJSON = [];
+            let allClassificationRecords = []; // Data klasifikasi dari sessionStorage
 
             function showNotification(message, type = 'success') {
                 notificationDiv.textContent = message;
@@ -355,6 +371,121 @@
                 sessionStorage.removeItem('notificationType');
             }
 
+            // Function to load and parse classification data from sessionStorage
+            function loadClassificationOptions() {
+                const storedClassificationData = sessionStorage.getItem('allClassificationRecords');
+                if (storedClassificationData) {
+                    try {
+                        allClassificationRecords = JSON.parse(storedClassificationData);
+                        // Ensure 'kelas' property is an array
+                        allClassificationRecords.forEach(item => {
+                            if (!Array.isArray(item.kelas)) {
+                                item.kelas = item.kelas ? [item.kelas] : []; // Convert string to array or empty array
+                            }
+                        });
+                        populatePhylum();
+                    } catch (e) {
+                        console.error('Error parsing classification data from sessionStorage:', e);
+                        allClassificationRecords = [];
+                        showNotification('Gagal memuat data klasifikasi.', 'error');
+                    }
+                } else {
+                    allClassificationRecords = [];
+                    showNotification('Belum ada data klasifikasi.', 'info');
+                }
+            }
+
+            // Function to populate Phylum dropdown
+            function populatePhylum() {
+                filumSelect.innerHTML = '<option value="">Pilih Phylum</option>';
+                subFilumSelect.innerHTML = '<option value="">Pilih Sub Phylum</option>';
+                kelasSelect.innerHTML = '<option value="">Pilih Kelas</option>';
+
+                const uniquePhylums = new Set();
+                allClassificationRecords.forEach(item => {
+                    if (item.phylum) {
+                        uniquePhylums.add(item.phylum);
+                    }
+                });
+
+                uniquePhylums.forEach(phylum => {
+                    const option = document.createElement('option');
+                    option.value = phylum;
+                    option.textContent = phylum;
+                    filumSelect.appendChild(option);
+                });
+            }
+
+            // Function to populate Sub Phylum dropdown based on selected Phylum
+            function populateSubPhylum() {
+                subFilumSelect.innerHTML = '<option value="">Pilih Sub Phylum</option>';
+                kelasSelect.innerHTML = '<option value="">Pilih Kelas</option>';
+
+                const selectedPhylum = filumSelect.value;
+                if (!selectedPhylum) return;
+
+                const uniqueSubPhylums = new Set();
+                let hasActualSubPhylum = false;
+                allClassificationRecords.forEach(item => {
+                    if (item.phylum === selectedPhylum && item.sub_phylum) {
+                        uniqueSubPhylums.add(item.sub_phylum);
+                        if (item.sub_phylum.trim() !== '') {
+                            hasActualSubPhylum = true;
+                        }
+                    }
+                });
+
+                uniqueSubPhylums.forEach(subPhylum => {
+                    const option = document.createElement('option');
+                    option.value = subPhylum;
+                    option.textContent = subPhylum;
+                    subFilumSelect.appendChild(option);
+                });
+
+                const noSubPhylumOption = document.createElement('option');
+                noSubPhylumOption.value = "";
+                noSubPhylumOption.textContent = "Tidak Ada Sub Phylum";
+                subFilumSelect.appendChild(noSubPhylumOption);
+
+                if (!hasActualSubPhylum) {
+                    subFilumSelect.value = "";
+                }
+            }
+
+            // Function to populate Kelas dropdown based on selected Phylum and Sub Phylum
+            function populateKelas() {
+                kelasSelect.innerHTML = '<option value="">Pilih Kelas</option>';
+
+                const selectedPhylum = filumSelect.value;
+                const selectedSubPhylum = subFilumSelect.value;
+                if (!selectedPhylum) return;
+
+                const matchingRecords = allClassificationRecords.filter(item =>
+                    item.phylum === selectedPhylum &&
+                    (selectedSubPhylum === "" ? !item.sub_phylum || item.sub_phylum === "" : item.sub_phylum === selectedSubPhylum)
+                );
+
+                const uniqueKelas = new Set();
+                matchingRecords.forEach(record => {
+                    if (Array.isArray(record.kelas)) {
+                        record.kelas.forEach(k => {
+                            if (k) uniqueKelas.add(k);
+                        });
+                    }
+                });
+
+                uniqueKelas.forEach(kelas => {
+                    const option = document.createElement('option');
+                    option.value = kelas;
+                    option.textContent = kelas;
+                    kelasSelect.appendChild(option);
+                });
+            }
+
+            // Event Listeners for classification dropdown changes
+            filumSelect.addEventListener('change', populateSubPhylum);
+            subFilumSelect.addEventListener('change', populateKelas);
+
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('editIndex')) {
                 editIndex = parseInt(urlParams.get('editIndex'));
@@ -368,9 +499,6 @@
                         if (speciesData) {
                             document.getElementById('nama_umum').value = speciesData.nama_umum || '';
                             document.getElementById('nama_latin').value = speciesData.nama_latin || '';
-                            document.getElementById('filum').value = speciesData.filum || '';
-                            document.getElementById('sub_filum').value = speciesData.sub_filum || ''; // Populating Sub Phylum
-                            document.getElementById('kelas').value = speciesData.kelas || '';
                             document.getElementById('deskripsi').value = speciesData.deskripsi || '';
                             document.getElementById('habitat').value = speciesData.habitat || '';
                             document.getElementById('peran_ekologis').value = speciesData.peran_ekologis || '';
@@ -385,6 +513,16 @@
 
                             currentMapGeoJSON = speciesData.peta_persebaran || [];
                             console.log('Loaded species map data for edit mode:', currentMapGeoJSON);
+
+                            // Load classification options
+                            loadClassificationOptions();
+
+                            // Set selected classification values
+                            filumSelect.value = speciesData.filum || '';
+                            populateSubPhylum(); // Repopulate Sub Phylum based on loaded Phylum
+                            subFilumSelect.value = speciesData.sub_filum || ''; // Set Sub Phylum
+                            populateKelas(); // Repopulate Kelas based on loaded Phylum and Sub Phylum
+                            kelasSelect.value = speciesData.kelas || ''; // Set Kelas
 
                         } else {
                             console.error('Data spesies tidak ditemukan untuk indeks ini:', editIndex);
@@ -438,9 +576,9 @@
                 const formData = {
                     nama_umum: document.getElementById('nama_umum').value,
                     nama_latin: document.getElementById('nama_latin').value,
-                    filum: document.getElementById('filum').value,
-                    sub_filum: document.getElementById('sub_filum').value, // Saving Sub Phylum
-                    kelas: document.getElementById('kelas').value,
+                    filum: filumSelect.value, // Use dropdown value
+                    sub_filum: subFilumSelect.value, // Use dropdown value
+                    kelas: kelasSelect.value, // Use dropdown value
                     deskripsi: document.getElementById('deskripsi').value,
                     habitat: document.getElementById('habitat').value,
                     peran_ekologis: document.getElementById('peran_ekologis').value,
@@ -461,9 +599,6 @@
                     const tempEditFormData = JSON.parse(tempEditFormDataString);
                     document.getElementById('nama_umum').value = tempEditFormData.nama_umum || '';
                     document.getElementById('nama_latin').value = tempEditFormData.nama_latin || '';
-                    document.getElementById('filum').value = tempEditFormData.filum || '';
-                    document.getElementById('sub_filum').value = tempEditFormData.sub_filum || ''; // Populating Sub Phylum
-                    document.getElementById('kelas').value = tempEditFormData.kelas || '';
                     document.getElementById('deskripsi').value = tempEditFormData.deskripsi || '';
                     document.getElementById('habitat').value = tempEditFormData.habitat || '';
                     document.getElementById('peran_ekologis').value = tempEditFormData.peran_ekologis || '';
@@ -476,6 +611,15 @@
                     currentImages = tempEditFormData.gambar || [];
                     renderImagePreviews();
 
+                    // Load classification options first, then set selected values
+                    loadClassificationOptions();
+
+                    filumSelect.value = tempEditFormData.filum || '';
+                    populateSubPhylum(); // Repopulate Sub Phylum based on loaded Phylum
+                    subFilumSelect.value = tempEditFormData.sub_filum || '';
+                    populateKelas(); // Repopulate Kelas based on loaded Phylum and Sub Phylum
+                    kelasSelect.value = tempEditFormData.kelas || '';
+
                     sessionStorage.removeItem('tempEditSpeciesFormData');
                     console.log('tempEditSpeciesFormData removed from sessionStorage.');
                 } catch (e) {
@@ -483,6 +627,7 @@
                     sessionStorage.removeItem('tempEditSpeciesFormData');
                 }
             }
+
 
             function renderAllSavedMaps() {
                 mapListContainer.innerHTML = '';
@@ -667,9 +812,9 @@
 
                 const nama_umum = document.getElementById('nama_umum').value.trim();
                 const nama_latin = document.getElementById('nama_latin').value.trim();
-                const filum = document.getElementById('filum').value.trim();
-                const sub_filum = document.getElementById('sub_filum').value.trim(); // Get Sub Phylum value
-                const kelas = document.getElementById('kelas').value.trim();
+                const filum = filumSelect.value.trim(); // Get value from select
+                const sub_filum = subFilumSelect.value.trim(); // Get value from select
+                const kelas = kelasSelect.value.trim(); // Get value from select
                 const deskripsi = document.getElementById('deskripsi').value.trim();
                 const habitat = document.getElementById('habitat').value.trim();
                 const peran_ekologis = document.getElementById('peran_ekologis').value.trim();
@@ -680,12 +825,24 @@
                 if (!nama_umum) emptyFields.push('Nama Umum');
                 if (!nama_latin) emptyFields.push('Nama Latin');
                 if (!filum) emptyFields.push('Phylum');
-                if (!sub_filum) emptyFields.push('Sub Phylum'); // Validate Sub Phylum
+
+                const hasActualSubPhylumOptions = Array.from(allClassificationRecords).some(c => c.phylum === filum && c.sub_phylum && c.sub_phylum.trim() !== '');
+                if (filum && sub_filum === "" && hasActualSubPhylumOptions) {
+                    emptyFields.push('Sub Phylum');
+                }
                 if (!kelas) emptyFields.push('Kelas');
                 if (!deskripsi) emptyFields.push('Deskripsi');
                 if (!habitat) emptyFields.push('Habitat');
                 if (!peran_ekologis) emptyFields.push('Peran Ekologis');
                 if (!status_konservasi) emptyFields.push('Status Konservasi');
+
+                if (currentImages.length === 0) {
+                    emptyFields.push('Gambar');
+                }
+
+                if (currentMapGeoJSON.length === 0) {
+                    emptyFields.push('Peta Persebaran');
+                }
 
                 if (emptyFields.length > 0) {
                     showNotification(`Harap lengkapi: ${emptyFields.join(', ')}.`, 'error');
@@ -703,7 +860,7 @@
                     nama_umum,
                     nama_latin,
                     filum,
-                    sub_filum, // Save Sub Phylum
+                    sub_filum: sub_filum === "" ? null : sub_filum, // Save null if "Tidak Ada Sub Phylum"
                     kelas,
                     gambar: currentImages,
                     deskripsi,
