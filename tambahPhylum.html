@@ -227,8 +227,8 @@
                     notificationDiv.classList.add('bg-green-500');
                 } else if (type === 'error') {
                     notificationDiv.classList.add('bg-red-500');
-                } else if (type === 'info') {
-                    notificationDiv.classList.add('bg-blue-500');
+                } else if (type === 'error') {
+                    notificationDiv.classList.add('bg-red-500');
                 } else {
                     notificationDiv.classList.add('bg-gray-500');
                 }
@@ -311,6 +311,13 @@
                         console.error("Error parsing stored data:", e);
                         showNotification('Gagal memuat data sebelumnya. Data baru akan disimpan.', 'error');
                     }
+                }
+
+                // Check for duplicate phylum name before adding
+                const isPhylumDuplicate = allClassificationRecords.some(record => record.phylum.toLowerCase() === phylum.toLowerCase());
+                if (isPhylumDuplicate) {
+                    showNotification('Nama Phylum ini sudah ada!', 'error');
+                    return;
                 }
 
                 const newClassification = {

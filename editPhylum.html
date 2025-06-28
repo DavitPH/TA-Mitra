@@ -309,7 +309,7 @@
                         listItem.innerHTML = `
                             <span>${displayName}</span>
                             <div class="action-buttons flex items-center">
-                                ${subPhylumObj.name !== NO_SUBPHYLUM_NAME ?
+                                ${subPhylumObj.name !== NO_SUBPHYLUM_NAME ? // Hanya tampilkan tombol edit jika bukan dummy
                                 `<button type="button" class="edit-subphylum-btn text-gray-500 hover:text-blue-500 transition-colors ml-2" data-index="${index}" title="Edit Sub Phylum"><i class="fas fa-pencil-alt"></i></button>` : ''}
                                 <button type="button" class="delete-subphylum-btn text-gray-500 hover:text-red-500 transition-colors ml-2" data-index="${index}" title="Hapus Sub Phylum"><i class="fas fa-trash"></i></button>
                             </div>
@@ -321,6 +321,7 @@
                 // Add event listeners for edit and delete buttons
                 tempSubPhylumList.querySelectorAll('.edit-subphylum-btn').forEach(button => {
                     button.onclick = (event) => {
+                        // Menggunakan event.target.closest untuk mendapatkan tombol yang sebenarnya
                         const indexToEdit = parseInt(event.target.closest('button').dataset.index);
                         editingSubPhylumIndex = indexToEdit;
                         subPhylumInput.value = tempSubPhylumArray[indexToEdit].name;
@@ -342,14 +343,22 @@
                         confirmModal.style.display = 'flex';
 
                         confirmActionButton.onclick = () => {
+                            // Jika yang dihapus adalah NO_SUBPHYLUM_NAME, kita tidak bisa menghapus objeknya, hanya mengosongkan kelasnya
                             if (subPhylumName === NO_SUBPHYLUM_NAME) {
-                                showNotification('Sub Phylum default tidak bisa dihapus, hanya bisa dikosongkan kelasnya.', 'error');
-                                confirmModal.style.display = 'none';
-                                return;
+                                // Cek apakah ada kelas di dalamnya
+                                if (tempSubPhylumArray[indexToDelete].kelas.length > 0) {
+                                    // Kosongkan kelasnya saja
+                                    tempSubPhylumArray[indexToDelete].kelas = [];
+                                    showNotification('Kelas dari Sub Phylum default berhasil dikosongkan.', 'success');
+                                } else {
+                                    showNotification('Tidak ada kelas untuk dikosongkan pada Sub Phylum default.', 'info');
+                                }
+                            } else {
+                                // Hapus sub phylum beserta kelasnya
+                                tempSubPhylumArray.splice(indexToDelete, 1);
+                                showNotification('Sub Phylum berhasil dihapus!', 'success');
                             }
-                            tempSubPhylumArray.splice(indexToDelete, 1);
                             renderTempSubPhylumList();
-                            showNotification('Sub Phylum berhasil dihapus!', 'success');
                             confirmModal.style.display = 'none';
                             confirmActionButton.onclick = null; // Reset to prevent multiple calls
                         };
@@ -366,22 +375,41 @@
                 const newSubPhylumName = subPhylumInput.value.trim();
                 if (newSubPhylumName) {
                     const isDuplicate = tempSubPhylumArray.some((item, idx) =>
-                        item.name.toLowerCase() === newSubPhylumName.toLowerCase() && idx !== editingSubPhylumIndex
+                        // Check for duplicate name, excluding the dummy subphylum and the item being edited
+                        (item.name.toLowerCase() === newSubPhylumName.toLowerCase() && item.name !== NO_SUBPHYLUM_NAME && idx !== editingSubPhylumIndex)
                     );
 
                     if (!isDuplicate) {
                         if (editingSubPhylumIndex !== null) {
                             // Update existing sub phylum
+                            if (tempSubPhylumArray[editingSubPhylumIndex].name === NO_SUBPHYLUM_NAME) {
+                                showNotification('Tidak bisa mengedit nama Sub Phylum default.', 'error');
+                                // Reset input dan tombol
+                                subPhylumInput.value = '';
+                                editingSubPhylumIndex = null;
+                                addSubPhylumButton.textContent = 'Tambah';
+                                return;
+                            }
                             tempSubPhylumArray[editingSubPhylumIndex].name = newSubPhylumName;
                             showNotification('Sub Phylum berhasil diperbarui!', 'success');
                             editingSubPhylumIndex = null; // Reset editing state
                             addSubPhylumButton.textContent = 'Tambah'; // Reset button text
                         } else {
-                            // Add new sub phylum
+                            // Add new sub phylum, ensuring it's not the dummy name
+                            if (newSubPhylumName === NO_SUBPHYLUM_NAME) {
+                                showNotification('Nama Sub Phylum tidak boleh sama dengan nama default.', 'error');
+                                return;
+                            }
                             tempSubPhylumArray.push({ name: newSubPhylumName, kelas: [] });
                             showNotification('Sub Phylum berhasil ditambahkan!', 'success');
                         }
                         subPhylumInput.value = ''; // Clear input after adding/updating
+                        // Pastikan NO_SUBPHYLUM_NAME selalu di akhir setelah penambahan/pembaruan
+                        tempSubPhylumArray.sort((a, b) => {
+                            if (a.name === NO_SUBPHYLUM_NAME) return 1;
+                            if (b.name === NO_SUBPHYLUM_NAME) return -1;
+                            return a.name.localeCompare(b.name);
+                        });
                         renderTempSubPhylumList();
                     } else {
                         showNotification('Sub Phylum ini sudah ada dalam daftar!', 'info');
@@ -422,7 +450,12 @@
                                     noSubPhylumEntry = { name: NO_SUBPHYLUM_NAME, kelas: [] };
                                     item.sub_phylum.push(noSubPhylumEntry); // Add at the end for edit view simplicity
                                 }
-                                noSubPhylumEntry.kelas.push(...item.kelas);
+                                // Pastikan tidak ada duplikasi kelas saat migrasi
+                                item.kelas.forEach(k => {
+                                    if (!noSubPhylumEntry.kelas.includes(k)) {
+                                        noSubPhylumEntry.kelas.push(k);
+                                    }
+                                });
                                 delete item.kelas; // Hapus properti kelas dari level root
                             }
                         });
@@ -475,17 +508,21 @@
                 }
 
                 if (editIndex !== -1) {
-                    allClassificationRecords[editIndex].phylum = phylum;
-                    // Filter out any empty 'kelas' arrays from sub_phylum objects if they are not the dummy
-                    allClassificationRecords[editIndex].sub_phylum = tempSubPhylumArray.filter(sp =>
-                        sp.name !== NO_SUBPHYLUM_NAME || sp.kelas.length > 0
-                    ); // Keep dummy only if it has classes
-
-                    // Remove the dummy if no classes are associated with it after filtering
-                    if (allClassificationRecords[editIndex].sub_phylum.some(sp => sp.name === NO_SUBPHYLUM_NAME && sp.kelas.length === 0)) {
-                        allClassificationRecords[editIndex].sub_phylum = allClassificationRecords[editIndex].sub_phylum.filter(sp => sp.name !== NO_SUBPHYLUM_NAME);
+                    // Check for duplicate phylum name, excluding the current phylum being edited
+                    const isPhylumDuplicate = allClassificationRecords.some((record, idx) =>
+                        idx !== editIndex && record.phylum.toLowerCase() === phylum.toLowerCase()
+                    );
+                    if (isPhylumDuplicate) {
+                        showNotification('Nama Phylum ini sudah ada!', 'error');
+                        return;
                     }
 
+                    allClassificationRecords[editIndex].phylum = phylum;
+                    // Filter out any empty 'kelas' arrays from sub_phylum objects if they are not the dummy
+                    // Dan pastikan dummy 'Tidak Ada Sub Phylum' hanya disimpan jika ada kelas di dalamnya
+                    allClassificationRecords[editIndex].sub_phylum = tempSubPhylumArray.filter(sp =>
+                        sp.name !== NO_SUBPHYLUM_NAME || (sp.name === NO_SUBPHYLUM_NAME && sp.kelas.length > 0)
+                    );
 
                     sessionStorage.setItem('allClassificationRecords', JSON.stringify(allClassificationRecords));
 

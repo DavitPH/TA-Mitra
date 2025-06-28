@@ -565,6 +565,7 @@
             function applySearchAndFilter() {
                 const searchTerm = searchInput.value.toLowerCase();
 
+                // Pastikan filteredClassificationData berisi referensi ke objek asli di allClassificationData
                 filteredClassificationData = allClassificationData.filter(classification => {
                     const matchesPhylum = classification.phylum && classification.phylum.toLowerCase().includes(searchTerm);
                     const matchesSubPhylum = Array.isArray(classification.sub_phylum) &&
@@ -575,9 +576,14 @@
                     return matchesPhylum || matchesSubPhylum || matchesKelas;
                 });
 
+                // Penting: Simpan index asli dari allClassificationData di filteredClassificationData
                 filteredClassificationData.forEach((classification, index) => {
+                    // Temukan indeks asli di allClassificationData
+                    const originalIndex = allClassificationData.indexOf(classification);
+                    classification.originalIndexInAllData = originalIndex; // Tambahkan properti baru
                     classification.displayNumber = index + 1;
                 });
+
 
                 visualRowsData = [];
                 filteredClassificationData.forEach((classification) => {
@@ -596,7 +602,8 @@
                                 phylum: classification.phylum,
                                 sub_phylum_name: subPhylumObj.name,
                                 kelas: kelasItem,
-                                originalPhylumIndex: allClassificationData.indexOf(classification),
+                                // Gunakan originalIndexInAllData untuk memastikan referensi ke data asli
+                                originalPhylumIndex: classification.originalIndexInAllData,
                                 originalSubPhylumIndex: subPhylumIndex,
                                 phylumDisplayNumber: classification.displayNumber,
                             });
@@ -641,6 +648,7 @@
 
                     rowsToDisplay.forEach((rowData, i) => {
                         const row = document.createElement('tr');
+                        // Gunakan originalPhylumIndex dari rowData yang sudah benar
                         const originalPhylum = allClassificationData[rowData.originalPhylumIndex];
                         const originalFilteredIndex = filteredClassificationData.indexOf(originalPhylum);
                         row.className = originalFilteredIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50';
@@ -653,6 +661,7 @@
 
                         let phylumRowspan = 0;
                         if (isNewPhylumHeaderForThisPage) {
+                            // Hitung rowspan berdasarkan visualRowsData yang akan ditampilkan di halaman ini
                             for (let j = i; j < rowsToDisplay.length; j++) {
                                 if (rowsToDisplay[j].originalPhylumIndex === rowData.originalPhylumIndex) {
                                     phylumRowspan++;
@@ -664,6 +673,7 @@
 
                         let subPhylumRowspan = 0;
                         if (isNewSubPhylumHeaderForThisPage) {
+                            // Hitung rowspan berdasarkan visualRowsData yang akan ditampilkan di halaman ini
                             for (let j = i; j < rowsToDisplay.length; j++) {
                                 if (rowsToDisplay[j].originalPhylumIndex === rowData.originalPhylumIndex &&
                                     rowsToDisplay[j].originalSubPhylumIndex === rowData.originalSubPhylumIndex) {
@@ -741,6 +751,9 @@
                 paginationInfoTotal.textContent = totalVisualRecords;
 
                 updatePaginationControls(totalPages, totalVisualRecords, visualStartIndex, visualEndIndex);
+                // Hanya panggil attachEventListeners jika Anda menggunakan event delegation
+                // Jika event listener diikat langsung ke tombol di loop render, ini tidak diperlukan.
+                // Dalam kasus ini, kita sudah menggunakan event delegation, jadi ini OK.
                 attachEventListeners();
             }
 
@@ -852,8 +865,11 @@
                 }
             }
 
+            // Menggunakan event delegation pada body tabel
             function attachEventListeners() {
+                // Hapus listener lama jika ada, untuk menghindari duplikasi
                 classificationTableBody.removeEventListener('click', handleTableButtonClick);
+                // Tambahkan listener baru
                 classificationTableBody.addEventListener('click', handleTableButtonClick);
             }
 
@@ -861,11 +877,13 @@
                 const target = event.target.closest('.delete-btn, .edit-kelas-btn, .edit-phylum-btn');
                 if (!target) return;
 
+                // Pastikan untuk mendapatkan index dari `dataset.index` atau `dataset.phylumIndex`
+                // yang merupakan indeks asli di `allClassificationData`
                 if (target.classList.contains('delete-btn')) {
-                    const indexString = target.dataset.index;
+                    const indexString = target.dataset.index; // Mengambil data-index dari tombol
                     const index = parseInt(indexString);
                     if (isNaN(index)) {
-                        console.error('Invalid index found:', indexString);
+                        console.error('Invalid index found for delete:', indexString);
                         return;
                     }
                     actionToConfirm = 'delete';
@@ -878,7 +896,7 @@
                     confirmActionButton.classList.add('bg-red-600', 'hover:bg-red-700');
                     confirmModal.style.display = 'flex';
                 } else if (target.classList.contains('edit-kelas-btn')) {
-                    currentPhylumIndex = parseInt(target.dataset.phylumIndex);
+                    currentPhylumIndex = parseInt(target.dataset.phylumIndex); // Mengambil data-phylum-index dari tombol
                     const phylumEntry = allClassificationData[currentPhylumIndex];
 
                     subPhylumSelect.innerHTML = ''; // Clear existing options
@@ -931,10 +949,10 @@
                     kelasModal.style.display = 'flex';
 
                 } else if (target.classList.contains('edit-phylum-btn')) {
-                    const indexString = target.dataset.index;
+                    const indexString = target.dataset.index; // Mengambil data-index dari tombol
                     const index = parseInt(indexString);
                     if (isNaN(index)) {
-                        console.error('Invalid index found:', indexString);
+                        console.error('Invalid index found for edit phylum:', indexString);
                         return;
                     }
                     window.location.href = `editPhylum.html?editIndex=${index}`;
