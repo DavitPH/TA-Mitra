@@ -206,9 +206,6 @@
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Peran</th>
                         <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Kata Sandi</th>
-                        <th scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">
                             Aksi</th>
                     </tr>
@@ -376,8 +373,9 @@
                     filteredAccountsData = allAccountsData.filter(account => {
                         return (
                             (account.email && account.email.toLowerCase().includes(searchTerm)) ||
-                            (account.peran && account.peran.toLowerCase().includes(searchTerm)) ||
-                            (account.password && account.password.toLowerCase().includes(searchTerm))
+                            (account.peran && account.peran.toLowerCase().includes(searchTerm))
+                            // Baris berikut dikomentari/dihapus agar password tidak menjadi bagian dari pencarian di tabel
+                            // || (account.password && account.password.toLowerCase().includes(searchTerm))
                         );
                     });
                     currentPage = 1;
@@ -423,8 +421,6 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     ${account.peran || '-'}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    ${account.password || '-'} </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
                                     <div class="flex items-center">
                                         <a href="editAkun.html?id=${account.id}" class="text-gray-500 hover:text-gray-700 mr-3" title="Edit Akun">
