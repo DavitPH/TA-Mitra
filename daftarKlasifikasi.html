@@ -723,17 +723,20 @@
                         if (isNewPhylumHeaderForThisPage) {
                             rowContent += `
                                 <td class="px-6 py-4 text-left text-sm font-medium table-cell-content" rowspan="${phylumRowspan}">
-                                    <button class="text-gray-500 hover:text-gray-700 mr-3 edit-kelas-btn" 
-                                            data-phylum-index="${rowData.originalPhylumIndex}" 
-                                            title="Edit Kelas">
-                                        <i class="fas fa-layer-group"></i>
-                                    </button>
-                                    <a href="editPhylum.html?editIndex=${rowData.originalPhylumIndex}" class="text-gray-500 hover:text-gray-700 mr-3 edit-phylum-btn" title="Edit Phylum/Sub Phylum">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button class="text-gray-500 hover:text-gray-700 delete-btn" data-index="${rowData.originalPhylumIndex}" title="Hapus Data">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <div class="flex items-center"> <!-- Added flex container here -->
+                                        <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors mr-3 edit-kelas-btn flex items-center"
+                                                data-phylum-index="${rowData.originalPhylumIndex}"
+                                                title="Kelas">
+                                            <i class="fas fa-plus mr-1"></i>
+                                            Kelas
+                                        </button>
+                                        <a href="editPhylum.html?editIndex=${rowData.originalPhylumIndex}" class="text-gray-500 hover:text-gray-700 mr-3 edit-phylum-btn" title="Edit Phylum/Sub Phylum">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="text-gray-500 hover:text-gray-700 delete-btn" data-index="${rowData.originalPhylumIndex}" title="Hapus Data">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             `;
                         }
