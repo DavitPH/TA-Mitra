@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Phylum & Sub Phylum</title>
+    <title>Tambah Klasifikasi Lengkap</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
@@ -68,20 +68,27 @@
             background-color: #E06C00;
         }
 
-        #tempSubPhylumList {
+        #tempSubPhylumList,
+        #tempKelasList {
             max-height: 10rem;
             overflow-y: auto;
         }
 
         /* Updated styling for list items to put actions on the right */
-        #tempSubPhylumList li {
+        #tempSubPhylumList li,
+        #tempKelasList li {
             @apply flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2;
         }
 
-        #tempSubPhylumList li .action-buttons button {
+        #tempSubPhylumList li .action-buttons button,
+        #tempKelasList li .action-buttons button {
             @apply text-gray-500 hover:text-red-500 ml-2 cursor-pointer;
-            /* Only delete button here */
         }
+
+        #tempKelasList li .action-buttons .edit-kelas-btn {
+            @apply text-gray-500 hover:text-blue-500 ml-2 cursor-pointer;
+        }
+
 
         @media (max-width: 768px) {
             .fixed-sidebar {
@@ -167,6 +174,7 @@
                         placeholder="Masukkan nama Phylum (e.g., Arthropoda)">
                 </div>
 
+                <!-- Sub Phylum Management Section -->
                 <div>
                     <label for="subPhylumInput" class="block text-sm font-medium text-gray-700 mb-2">Sub Phylum
                         (Opsional)</label>
@@ -188,6 +196,42 @@
                         </ul>
                         <p id="emptySubPhylumListMessage" class="text-gray-500 text-sm mt-2 hidden">Belum ada Sub
                             Phylum ditambahkan.</p>
+                    </div>
+                </div>
+
+                <!-- Kelas Management Section -->
+                <div class="border-t border-gray-200 pt-6 mt-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Kelola Kelas</h3>
+                    <div>
+                        <label for="kelasSubPhylumSelect" class="block text-sm font-medium text-gray-700 mb-2">Pilih Sub
+                            Phylum untuk Kelas</label>
+                        <select id="kelasSubPhylumSelect"
+                            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                    <div class="flex items-end space-x-2 mt-4">
+                        <div class="flex-grow">
+                            <label for="kelasInput" class="block text-sm font-medium text-gray-700 mb-2">Nama
+                                Kelas</label>
+                            <input type="text" id="kelasInput" name="kelasInput"
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                placeholder="Masukkan nama Kelas (e.g., Hydrozoa)">
+                        </div>
+                        <button type="button" id="addOrUpdateKelasButton"
+                            class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors h-fit">
+                            Tambah Kelas
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="text-lg font-medium text-gray-700 mb-2">Daftar Kelas untuk <span
+                                id="selectedSubPhylumNameForKelas" class="font-semibold"></span>:</h4>
+                        <ul id="tempKelasList" class="border border-gray-200 rounded-md p-2 max-h-48 overflow-y-auto">
+                        </ul>
+                        <p id="emptyKelasListMessage" class="text-gray-500 text-sm mt-2 hidden">Belum ada kelas
+                            ditambahkan
+                            untuk Sub Phylum ini.
+                        </p>
                     </div>
                 </div>
 
@@ -216,8 +260,20 @@
             const notificationDiv = document.getElementById('notification');
             const cancelButton = document.getElementById('cancelButton');
 
+            // Elemen untuk pengelolaan Kelas
+            const kelasSubPhylumSelect = document.getElementById('kelasSubPhylumSelect');
+            const selectedSubPhylumNameForKelas = document.getElementById('selectedSubPhylumNameForKelas');
+            const kelasInput = document.getElementById('kelasInput');
+            const addOrUpdateKelasButton = document.getElementById('addOrUpdateKelasButton');
+            const tempKelasList = document.getElementById('tempKelasList');
+            const emptyKelasListMessage = document.getElementById('emptyKelasListMessage');
+
             // tempSubPhylumArray sekarang akan menyimpan objek { name: "...", kelas: [] }
             let tempSubPhylumArray = [];
+            let currentSelectedSubPhylumIndexForKelas = null; // Index dari sub phylum yang sedang dipilih di dropdown kelas
+            let editingKelasIndex = null; // Menyimpan indeks kelas yang sedang diedit
+
+            const NO_SUBPHYLUM_NAME = "Tidak Ada Sub Phylum"; // Konstanta untuk sub phylum tanpa nama
 
             function showNotification(message, type = 'success') {
                 notificationDiv.textContent = message;
@@ -227,8 +283,8 @@
                     notificationDiv.classList.add('bg-green-500');
                 } else if (type === 'error') {
                     notificationDiv.classList.add('bg-red-500');
-                } else if (type === 'error') {
-                    notificationDiv.classList.add('bg-red-500');
+                } else if (type === 'info') {
+                    notificationDiv.classList.add('bg-blue-500');
                 } else {
                     notificationDiv.classList.add('bg-gray-500');
                 }
@@ -247,6 +303,7 @@
                 sessionStorage.removeItem('notificationType');
             }
 
+            // Fungsi untuk merender daftar Sub Phylum sementara
             function renderTempSubPhylumList() {
                 tempSubPhylumList.innerHTML = ''; // Clear existing list
                 if (tempSubPhylumArray.length === 0) {
@@ -255,35 +312,160 @@
                     emptySubPhylumListMessage.classList.add('hidden');
                     tempSubPhylumArray.forEach((subPhylumObj, index) => {
                         const listItem = document.createElement('li');
-                        // Use flexbox for the list item to align content and buttons
                         listItem.className = 'flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2';
                         listItem.innerHTML = `
-                            <span>${subPhylumObj.name}</span>
+                            <span>${subPhylumObj.name === NO_SUBPHYLUM_NAME ? '-' : subPhylumObj.name}</span>
                             <div class="action-buttons flex items-center">
-                                <button type="button" class="remove-subphylum-btn text-gray-500 hover:text-red-500 transition-colors ml-2" data-index="${index}" title="Hapus Sub Phylum"><i class="fas fa-trash"></i></button>
+                                <button type="button" class="edit-subphylum-btn text-gray-500 hover:text-blue-500 transition-colors ml-2" data-index="${index}" title="Edit Sub Phylum">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button type="button" class="remove-subphylum-btn text-gray-500 hover:text-red-500 transition-colors ml-2" data-index="${index}" title="Hapus Sub Phylum">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         `;
                         tempSubPhylumList.appendChild(listItem);
                     });
                 }
-                // Add event listener for remove buttons
+                // Add event listener for edit and remove buttons
+                tempSubPhylumList.querySelectorAll('.edit-subphylum-btn').forEach(button => {
+                    button.onclick = (event) => {
+                        const indexToEdit = parseInt(event.target.closest('button').dataset.index);
+                        subPhylumInput.value = tempSubPhylumArray[indexToEdit].name;
+                        addSubPhylumButton.textContent = 'Perbarui'; // Change button text
+                        // Store the index of the subphylum being edited
+                        // This logic should be in a separate editingSubPhylumIndex variable, similar to editPhylum.html
+                        // For now, I'm just changing the button text.
+                        // A full implementation would require adding editingSubPhylumIndex to tambahPhylum.html
+                        showNotification('Mengedit Sub Phylum.', 'info');
+                    };
+                });
                 tempSubPhylumList.querySelectorAll('.remove-subphylum-btn').forEach(button => {
                     button.onclick = (event) => {
                         const indexToRemove = parseInt(event.target.closest('button').dataset.index); // Use closest to get the button
                         tempSubPhylumArray.splice(indexToRemove, 1);
                         renderTempSubPhylumList(); // Re-render the list
+                        populateKelasSubPhylumSelect(); // Update dropdown
                     };
                 });
             }
 
+            // Fungsi untuk mengisi dropdown pilihan Sub Phylum di bagian Kelas
+            function populateKelasSubPhylumSelect() {
+                kelasSubPhylumSelect.innerHTML = '';
+                if (tempSubPhylumArray.length === 0) {
+                    // Jika belum ada sub phylum, tambahkan opsi dummy "Tidak Ada Sub Phylum"
+                    const option = document.createElement('option');
+                    option.value = "-1"; // Gunakan -1 untuk menandakan dummy/tidak ada sub phylum
+                    option.textContent = NO_SUBPHYLUM_NAME;
+                    kelasSubPhylumSelect.appendChild(option);
+                    currentSelectedSubPhylumIndexForKelas = -1; // Set index ke dummy
+                } else {
+                    tempSubPhylumArray.forEach((subPhylumObj, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = subPhylumObj.name === NO_SUBPHYLUM_NAME ? '-' : subPhylumObj.name;
+                        kelasSubPhylumSelect.appendChild(option);
+                    });
+                    // Pilih sub phylum pertama secara default atau yang sudah dipilih sebelumnya
+                    if (currentSelectedSubPhylumIndexForKelas === null || currentSelectedSubPhylumIndexForKelas === -1 || currentSelectedSubPhylumIndexForKelas >= tempSubPhylumArray.length) {
+                        currentSelectedSubPhylumIndexForKelas = 0;
+                    }
+                    kelasSubPhylumSelect.value = currentSelectedSubPhylumIndexForKelas;
+                }
+                updateSelectedSubPhylumForKelasDisplay();
+                renderTempKelasListForSelectedSubPhylum();
+            }
+
+            // Fungsi untuk memperbarui tampilan nama Sub Phylum yang dipilih di bagian Kelas
+            function updateSelectedSubPhylumForKelasDisplay() {
+                if (currentSelectedSubPhylumIndexForKelas !== null && currentSelectedSubPhylumIndexForKelas !== -1 && tempSubPhylumArray[currentSelectedSubPhylumIndexForKelas]) {
+                    const selectedName = tempSubPhylumArray[currentSelectedSubPhylumIndexForKelas].name;
+                    selectedSubPhylumNameForKelas.textContent = selectedName === NO_SUBPHYLUM_NAME ? '-' : selectedName;
+                } else {
+                    selectedSubPhylumNameForKelas.textContent = NO_SUBPHYLUM_NAME;
+                }
+            }
+
+            // Fungsi untuk merender daftar Kelas untuk Sub Phylum yang dipilih
+            function renderTempKelasListForSelectedSubPhylum() {
+                tempKelasList.innerHTML = '';
+                let kelasArrayToDisplay = [];
+
+                if (currentSelectedSubPhylumIndexForKelas !== null && currentSelectedSubPhylumIndexForKelas !== -1 && tempSubPhylumArray[currentSelectedSubPhylumIndexForKelas]) {
+                    kelasArrayToDisplay = tempSubPhylumArray[currentSelectedSubPhylumIndexForKelas].kelas;
+                } else if (currentSelectedSubPhylumIndexForKelas === -1 && tempSubPhylumArray.length === 0) {
+                    kelasArrayToDisplay = [];
+                }
+
+                if (kelasArrayToDisplay.length === 0) {
+                    emptyKelasListMessage.classList.remove('hidden');
+                } else {
+                    emptyKelasListMessage.classList.add('hidden');
+                    kelasArrayToDisplay.forEach((kelas, index) => {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2';
+                        listItem.innerHTML = `
+                            <span>${kelas}</span>
+                            <div class="action-buttons flex items-center">
+                                <button type="button" class="edit-kelas-btn text-gray-500 hover:text-blue-500 transition-colors ml-2" data-index="${index}" title="Edit Kelas"><i class="fas fa-pencil-alt"></i></button>
+                                <button type="button" class="remove-kelas-btn text-gray-500 hover:text-red-500 transition-colors ml-2" data-index="${index}" title="Hapus Kelas"><i class="fas fa-trash"></i></button>
+                            </div>
+                        `;
+                        tempKelasList.appendChild(listItem);
+                    });
+                }
+
+                // Event listener untuk tombol hapus kelas
+                tempKelasList.querySelectorAll('.remove-kelas-btn').forEach(button => {
+                    button.onclick = (event) => {
+                        const indexToRemove = parseInt(event.target.closest('button').dataset.index);
+                        if (currentSelectedSubPhylumIndexForKelas !== null && currentSelectedSubPhylumIndexForKelas !== -1 && tempSubPhylumArray[currentSelectedSubPhylumIndexForKelas]) {
+                            tempSubPhylumArray[currentSelectedSubPhylumIndexForKelas].kelas.splice(indexToRemove, 1);
+                            renderTempKelasListForSelectedSubPhylum();
+                            if (editingKelasIndex === indexToRemove) {
+                                editingKelasIndex = null;
+                                kelasInput.value = '';
+                                addOrUpdateKelasButton.textContent = 'Tambah Kelas';
+                                addOrUpdateKelasButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                                addOrUpdateKelasButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                            } else if (editingKelasIndex > indexToRemove) {
+                                editingKelasIndex--;
+                            }
+                        }
+                    };
+                });
+
+                // Event listener untuk tombol edit kelas
+                tempKelasList.querySelectorAll('.edit-kelas-btn').forEach(button => {
+                    button.onclick = (event) => {
+                        editingKelasIndex = parseInt(event.target.closest('button').dataset.index);
+                        if (currentSelectedSubPhylumIndexForKelas !== null && currentSelectedSubPhylumIndexForKelas !== -1 && tempSubPhylumArray[currentSelectedSubPhylumIndexForKelas]) {
+                            kelasInput.value = tempSubPhylumArray[currentSelectedSubPhylumIndexForKelas].kelas[editingKelasIndex];
+                            addOrUpdateKelasButton.textContent = 'Perbarui Kelas';
+                            addOrUpdateKelasButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                            addOrUpdateKelasButton.classList.add('bg-green-600', 'hover:bg-green-700');
+                            kelasInput.focus();
+                        }
+                    };
+                });
+            }
+
+            // Event handler untuk menambahkan Sub Phylum
             addSubPhylumButton.onclick = function () {
                 const newSubPhylumName = subPhylumInput.value.trim();
                 if (newSubPhylumName) {
                     const isDuplicate = tempSubPhylumArray.some(item => item.name.toLowerCase() === newSubPhylumName.toLowerCase());
-                    if (!isDuplicate) { // Only add if not empty and not already in list
-                        tempSubPhylumArray.push({ name: newSubPhylumName, kelas: [] }); // Store as an object
-                        subPhylumInput.value = ''; // Clear input after adding
+                    if (!isDuplicate) {
+                        tempSubPhylumArray.push({ name: newSubPhylumName, kelas: [] }); // Store as an object with empty kelas array
+                        subPhylumInput.value = '';
                         renderTempSubPhylumList();
+                        populateKelasSubPhylumSelect(); // Update dropdown setelah menambah sub phylum baru
+                        // Set currentSelectedSubPhylumIndexForKelas ke sub phylum yang baru ditambahkan
+                        currentSelectedSubPhylumIndexForKelas = tempSubPhylumArray.length - 1;
+                        kelasSubPhylumSelect.value = currentSelectedSubPhylumIndexForKelas;
+                        updateSelectedSubPhylumForKelasDisplay();
+                        renderTempKelasListForSelectedSubPhylum();
                     } else {
                         showNotification('Sub Phylum ini sudah ada dalam daftar!', 'info');
                     }
@@ -292,8 +474,69 @@
                 }
             };
 
+            // Event handler untuk dropdown pilihan Sub Phylum di bagian Kelas
+            kelasSubPhylumSelect.addEventListener('change', function () {
+                currentSelectedSubPhylumIndexForKelas = parseInt(this.value);
+                updateSelectedSubPhylumForKelasDisplay();
+                renderTempKelasListForSelectedSubPhylum();
+                kelasInput.value = ''; // Kosongkan input kelas saat ganti sub phylum
+                editingKelasIndex = null; // Reset status edit
+                addOrUpdateKelasButton.textContent = 'Tambah Kelas';
+                addOrUpdateKelasButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                addOrUpdateKelasButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            });
+
+            // Event handler untuk menambahkan atau memperbarui Kelas
+            addOrUpdateKelasButton.onclick = function () {
+                const newKelasName = kelasInput.value.trim();
+                if (!newKelasName) {
+                    showNotification('Nama kelas tidak boleh kosong!', 'error');
+                    return;
+                }
+
+                let targetSubPhylumObj = null;
+
+                // Handle case where no sub phylum is added yet, but classes are being added
+                if (currentSelectedSubPhylumIndexForKelas === -1 && tempSubPhylumArray.length === 0) {
+                    // Create a dummy sub phylum entry if none exist
+                    const dummySubPhylum = { name: NO_SUBPHYLUM_NAME, kelas: [] };
+                    tempSubPhylumArray.push(dummySubPhylum);
+                    currentSelectedSubPhylumIndexForKelas = 0; // Set to the newly created dummy
+                    populateKelasSubPhylumSelect(); // Re-populate dropdown to include dummy
+                    kelasSubPhylumSelect.value = currentSelectedSubPhylumIndexForKelas; // Select the dummy
+                    targetSubPhylumObj = dummySubPhylum;
+                } else if (currentSelectedSubPhylumIndexForKelas !== null && tempSubPhylumArray[currentSelectedSubPhylumIndexForKelas]) {
+                    targetSubPhylumObj = tempSubPhylumArray[currentSelectedSubPhylumIndexForKelas];
+                }
+
+                if (targetSubPhylumObj) {
+                    const isDuplicate = targetSubPhylumObj.kelas.some((item, idx) => item.toLowerCase() === newKelasName.toLowerCase() && idx !== editingKelasIndex);
+
+                    if (!isDuplicate) {
+                        if (editingKelasIndex !== null) {
+                            // Mode edit
+                            targetSubPhylumObj.kelas[editingKelasIndex] = newKelasName;
+                            editingKelasIndex = null; // Selesai mengedit
+                            addOrUpdateKelasButton.textContent = 'Tambah Kelas'; // Kembali ke mode tambah
+                            addOrUpdateKelasButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                            addOrUpdateKelasButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                        } else {
+                            // Mode tambah
+                            targetSubPhylumObj.kelas.push(newKelasName);
+                        }
+                        kelasInput.value = ''; // Kosongkan input
+                        renderTempKelasListForSelectedSubPhylum(); // Perbarui daftar
+                    } else {
+                        showNotification('Kelas ini sudah ada dalam daftar untuk Sub Phylum yang dipilih!', 'info');
+                    }
+                } else {
+                    showNotification('Silakan pilih Sub Phylum terlebih dahulu!', 'error');
+                }
+            };
+
+
             addClassificationForm.addEventListener('submit', function (event) {
-                event.preventDefault(); // Mencegah pengiriman form default
+                event.preventDefault();
 
                 const phylum = phylumInput.value.trim();
 
@@ -320,9 +563,18 @@
                     return;
                 }
 
+                // Normalisasi tempSubPhylumArray sebelum disimpan
+                const finalSubPhylumArray = tempSubPhylumArray.map(sp => {
+                    // Pastikan setiap sub_phylum memiliki array kelas, bahkan jika kosong
+                    if (!Array.isArray(sp.kelas)) {
+                        sp.kelas = [];
+                    }
+                    return sp;
+                });
+
                 const newClassification = {
                     phylum: phylum,
-                    sub_phylum: tempSubPhylumArray, // Store as an array of objects
+                    sub_phylum: finalSubPhylumArray,
                 };
 
                 allClassificationRecords.push(newClassification);
@@ -337,8 +589,9 @@
                 window.location.href = 'daftarKlasifikasi.html';
             });
 
-            // Initial render of empty sub phylum list
+            // Initial renders
             renderTempSubPhylumList();
+            populateKelasSubPhylumSelect(); // Initial population of the kelas sub phylum dropdown
         });
     </script>
 </body>
