@@ -344,7 +344,28 @@
     <div id="confirmModal" class="modal">
         <div class="modal-content max-w-sm">
             <h3 class="text-xl font-semibold mb-4 text-gray-800" id="confirmModalTitle"></h3>
-            <p class="text-gray-700 mb-6" id="confirmModalMessage"></p>
+            <!-- Konten detail spesies di dalam modal konfirmasi -->
+            <div id="speciesDetailForConfirmation" class="mb-6 text-center">
+                <!-- Container untuk gambar dan tombol navigasi di sampingnya -->
+                <div class="flex items-center justify-center mb-4">
+                    <button id="prevImageButton"
+                        class="bg-gray-700 text-white p-2 rounded-full opacity-75 hover:opacity-100 focus:outline-none mr-4">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div
+                        class="relative w-48 h-48 flex items-center justify-center border border-gray-300 rounded-lg overflow-hidden">
+                        <img id="confirmSpeciesImage" src="" alt="Gambar Spesies"
+                            class="max-w-full max-h-full object-contain">
+                    </div>
+                    <button id="nextImageButton"
+                        class="bg-gray-700 text-white p-2 rounded-full opacity-75 hover:opacity-100 focus:outline-none ml-4">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <p class="text-gray-700 text-lg font-semibold" id="confirmSpeciesNamaUmum"></p>
+                <p class="text-gray-600 italic" id="confirmSpeciesNamaLatin"></p>
+            </div>
+            <p class="text-gray-700 mb-6 hidden" id="confirmModalMessage"></p>
             <div class="flex justify-end space-x-4">
                 <button id="cancelConfirmButton"
                     class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors">
@@ -374,9 +395,16 @@
             const cancelConfirmButton = document.getElementById('cancelConfirmButton');
             const confirmModalTitle = document.getElementById('confirmModalTitle');
             const confirmModalMessage = document.getElementById('confirmModalMessage');
+            const confirmSpeciesImage = document.getElementById('confirmSpeciesImage'); // Elemen gambar
+            const confirmSpeciesNamaUmum = document.getElementById('confirmSpeciesNamaUmum'); // Elemen nama umum
+            const confirmSpeciesNamaLatin = document.getElementById('confirmSpeciesNamaLatin'); // Elemen nama latin
+            const prevImageButton = document.getElementById('prevImageButton'); // Tombol sebelumnya
+            const nextImageButton = document.getElementById('nextImageButton'); // Tombol berikutnya
+
             let actionToConfirm = null;
             let itemIndexToConfirm = null;
             let speciesDataForConfirmation = null;
+            let currentImageIndex = 0; // Indeks gambar yang sedang ditampilkan
 
             const searchInput = document.getElementById('searchInput');
             const emptyTableMessage = document.getElementById('emptyTableMessage');
@@ -720,6 +748,40 @@
                 }, 100);
             }
 
+            function updateImageInModal() {
+                if (speciesDataForConfirmation && speciesDataForConfirmation.gambar && speciesDataForConfirmation.gambar.length > 0) {
+                    confirmSpeciesImage.src = speciesDataForConfirmation.gambar[currentImageIndex];
+                    confirmSpeciesImage.classList.remove('hidden');
+                    // Tampilkan atau sembunyikan tombol navigasi
+                    if (speciesDataForConfirmation.gambar.length > 1) {
+                        prevImageButton.classList.remove('hidden');
+                        nextImageButton.classList.remove('hidden');
+                    } else {
+                        prevImageButton.classList.add('hidden');
+                        nextImageButton.classList.add('hidden');
+                    }
+                } else {
+                    confirmSpeciesImage.classList.add('hidden');
+                    confirmSpeciesImage.src = '';
+                    prevImageButton.classList.add('hidden');
+                    nextImageButton.classList.add('hidden');
+                }
+            }
+
+            prevImageButton.addEventListener('click', () => {
+                if (speciesDataForConfirmation && speciesDataForConfirmation.gambar && speciesDataForConfirmation.gambar.length > 1) {
+                    currentImageIndex = (currentImageIndex - 1 + speciesDataForConfirmation.gambar.length) % speciesDataForConfirmation.gambar.length;
+                    updateImageInModal();
+                }
+            });
+
+            nextImageButton.addEventListener('click', () => {
+                if (speciesDataForConfirmation && speciesDataForConfirmation.gambar && speciesDataForConfirmation.gambar.length > 1) {
+                    currentImageIndex = (currentImageIndex + 1) % speciesDataForConfirmation.gambar.length;
+                    updateImageInModal();
+                }
+            });
+
             function attachEventListeners() {
                 // Remove existing listeners to prevent duplicates
                 speciesTableBody.removeEventListener('click', handleTableButtonClick);
@@ -739,33 +801,35 @@
                     return;
                 }
 
+                actionToConfirm = null; // Reset action
+                itemIndexToConfirm = index;
+                speciesDataForConfirmation = allSpeciesData[itemIndexToConfirm];
+                currentImageIndex = 0; // Reset indeks gambar saat modal dibuka
+
+                // Set detail spesies di modal konfirmasi
+                confirmSpeciesNamaUmum.textContent = speciesDataForConfirmation.nama_umum || '-';
+                confirmSpeciesNamaLatin.textContent = speciesDataForConfirmation.nama_latin || '-';
+
+                updateImageInModal(); // Panggil fungsi untuk menampilkan gambar dan tombol navigasi
+
                 if (target.classList.contains('delete-btn')) {
                     actionToConfirm = 'delete';
-                    itemIndexToConfirm = index;
-                    speciesDataForConfirmation = allSpeciesData[itemIndexToConfirm];
-
-                    confirmModalTitle.textContent = `Hapus Data No. ${itemIndexToConfirm + 1}?`;
-                    confirmModalMessage.textContent = `Hapus data spesies "${speciesDataForConfirmation.nama_latin || speciesDataForConfirmation.nama_umum || '-'}"?`;
+                    confirmModalTitle.textContent = `Hapus Data Spesies Ini?`;
+                    confirmModalMessage.classList.remove('hidden'); // Ensure message is visible for delete
                     confirmActionButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                     confirmActionButton.classList.add('bg-red-600', 'hover:bg-red-700');
                     confirmModal.style.display = 'flex';
                 } else if (target.classList.contains('publish-btn')) {
                     actionToConfirm = 'togglePublish';
-                    itemIndexToConfirm = index;
-                    speciesDataForConfirmation = allSpeciesData[itemIndexToConfirm];
-
-                    confirmModalTitle.textContent = `Publish Data No. ${itemIndexToConfirm + 1}?`;
-                    confirmModalMessage.textContent = `Ubah status publikasi "${speciesDataForConfirmation.nama_latin || speciesDataForConfirmation.nama_umum || '-'}" menjadi Publish?`;
+                    confirmModalTitle.textContent = `Publish Data Spesies Ini?`;
+                    confirmModalMessage.classList.add('hidden'); // Hide message for publish/unpublish
                     confirmActionButton.classList.remove('bg-red-600', 'hover:bg-red-700');
                     confirmActionButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
                     confirmModal.style.display = 'flex';
                 } else if (target.classList.contains('unpublish-btn')) {
                     actionToConfirm = 'togglePublish';
-                    itemIndexToConfirm = index;
-                    speciesDataForConfirmation = allSpeciesData[itemIndexToConfirm];
-
-                    confirmModalTitle.textContent = `Unpublish Data No. ${itemIndexToConfirm + 1}?`;
-                    confirmModalMessage.textContent = `Ubah status publikasi "${speciesDataForConfirmation.nama_latin || speciesDataForConfirmation.nama_umum || '-'}" menjadi Unpublish?`;
+                    confirmModalTitle.textContent = `Unpublish Data Spesies Ini?`;
+                    confirmModalMessage.classList.add('hidden'); // Hide message for publish/unpublish
                     confirmActionButton.classList.remove('bg-red-600', 'hover:bg-red-700');
                     confirmActionButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
                     confirmModal.style.display = 'flex';
@@ -786,6 +850,9 @@
                     actionToConfirm = null;
                     itemIndexToConfirm = null;
                     speciesDataForConfirmation = null;
+                    confirmSpeciesImage.classList.add('hidden'); // Sembunyikan gambar setelah konfirmasi
+                    prevImageButton.classList.add('hidden'); // Sembunyikan tombol
+                    nextImageButton.classList.add('hidden'); // Sembunyikan tombol
                 }
             };
 
@@ -794,6 +861,9 @@
                 actionToConfirm = null;
                 itemIndexToConfirm = null;
                 speciesDataForConfirmation = null;
+                confirmSpeciesImage.classList.add('hidden'); // Sembunyikan gambar setelah batal
+                prevImageButton.classList.add('hidden'); // Sembunyikan tombol
+                nextImageButton.classList.add('hidden'); // Sembunyikan tombol
             };
 
             closeModalButton.onclick = function () {
@@ -816,6 +886,9 @@
                     actionToConfirm = null;
                     itemIndexToConfirm = null;
                     speciesDataForConfirmation = null;
+                    confirmSpeciesImage.classList.add('hidden'); // Sembunyikan gambar setelah menutup modal
+                    prevImageButton.classList.add('hidden'); // Sembunyikan tombol
+                    nextImageButton.classList.add('hidden'); // Sembunyikan tombol
                 }
             };
 
